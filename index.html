@@ -24,11 +24,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .page.active{display:block}
 
 /* NAV — safe area ile kesin çözüm */
-.nav{display:flex;background:#fff;border-top:1px solid #e8eaf6;flex-shrink:0}
-.nav-inner{display:flex;width:100%;padding-bottom:env(safe-area-inset-bottom,0px)}
-.nav button{flex:1;padding:8px 4px 8px;border:none;background:none;cursor:pointer;font-size:10px;color:#9094B0;display:flex;flex-direction:column;align-items:center;gap:3px;font-family:inherit;font-weight:500;transition:color 0.15s}
-.nav button.active{color:#5B6AF0}
-.nav button svg{width:22px;height:22px;stroke:currentColor;stroke-width:1.8;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.nav{background:#fff;border-top:1px solid #e8eaf6;flex-shrink:0;padding:8px 12px;padding-bottom:calc(env(safe-area-inset-bottom,0px) + 8px)}
+.nav-inner{display:flex;gap:6px;background:#F0F2FF;border-radius:16px;padding:4px}
+.nav button{flex:1;padding:7px 4px;border:none;background:none;cursor:pointer;font-size:10px;color:#9094B0;display:flex;flex-direction:column;align-items:center;gap:3px;font-family:inherit;font-weight:600;transition:all 0.2s;border-radius:12px}
+.nav button.active{color:#5B6AF0;background:#fff;box-shadow:0 1px 4px rgba(91,106,240,0.15)}
+.nav button svg{width:20px;height:20px;stroke:currentColor;stroke-width:1.8;fill:none;stroke-linecap:round;stroke-linejoin:round}
 .nav button.active svg{stroke-width:2.2}
 
 .card{background:#fff;border-radius:16px;padding:16px;margin-bottom:12px;box-shadow:0 2px 8px rgba(91,106,240,0.07)}
@@ -81,7 +81,7 @@ input::placeholder{color:#B0B4CC}
   body{background:#13131f;color:#f0f0ff}
   .header{background:linear-gradient(135deg,#3d4db8,#5a2db0)}
   .card,.metric:not(.accent),.nav{background:#1e1e30}
-  .nav{border-top-color:#2a2a40}
+  .nav{border-top-color:#2a2a40} .nav-inner{background:#252538} .nav button.active{background:#1e1e30;box-shadow:0 1px 4px rgba(0,0,0,0.3)}
   input,select{background:#252538;border-color:#2e2e48;color:#f0f0ff}
   input:focus,select:focus{background:#2a2a40;border-color:#5B6AF0}
   input::placeholder{color:#5a5a78}
