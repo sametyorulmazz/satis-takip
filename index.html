@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Satış Takip">
+<meta name="theme-color" content="#178CF2">
+<title>Satış Takip</title>
+<link rel="manifest" id="manifestLink">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f2f2f7;color:#1c1c1e;font-size:16px}
+.app{height:100%;display:flex;flex-direction:column;max-width:480px;margin:0 auto}
+.header{background:#fff;border-bottom:0.5px solid rgba(0,0,0,0.15);padding:env(safe-area-inset-top,14px) 16px 14px;padding-top:calc(env(safe-area-inset-top,0px) + 14px);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.header h1{font-size:17px;font-weight:600;letter-spacing:-0.3px}
+.header .sub{font-size:12px;color:#8e8e93}
+.pages{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.page{display:none;padding:12px;padding-bottom:calc(env(safe-area-inset-bottom,0px) + 12px)}
+.page.active{display:block}
+.nav{display:flex;background:#fff;border-top:0.5px solid rgba(0,0,0,0.15);flex-shrink:0;padding-bottom:env(safe-area-inset-bottom,0px)}
+.nav button{flex:1;padding:8px 4px 6px;border:none;background:none;cursor:pointer;font-size:10px;color:#8e8e93;display:flex;flex-direction:column;align-items:center;gap:3px;font-family:inherit;transition:color 0.1s}
+.nav button.active{color:#178CF2}
+.nav button svg{width:24px;height:24px;stroke:currentColor;stroke-width:1.8;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.card{background:#fff;border-radius:12px;padding:14px;margin-bottom:10px;box-shadow:0 1px 3px rgba(0,0,0,0.06)}
+.sec{font-size:12px;font-weight:600;color:#8e8e93;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:10px}
+label{font-size:13px;color:#8e8e93;display:block;margin-bottom:4px;margin-top:12px}
+label:first-of-type{margin-top:0}
+input,select{width:100%;padding:10px 12px;border:1px solid rgba(0,0,0,0.12);border-radius:10px;font-size:15px;background:#f9f9f9;color:#1c1c1e;font-family:inherit;appearance:none;-webkit-appearance:none}
+input:focus,select:focus{outline:none;border-color:#178CF2;background:#fff}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:11px 16px;border-radius:10px;border:1px solid rgba(0,0,0,0.12);background:#fff;color:#1c1c1e;font-size:15px;cursor:pointer;font-family:inherit;font-weight:500;transition:opacity 0.1s}
+.btn:active{opacity:0.7}
+.btn.primary{background:#178CF2;color:#fff;border-color:#178CF2}
+.btn.full{width:100%}
+.btn.sm{padding:7px 12px;font-size:13px}
+.metrics{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+.metric{background:#fff;border-radius:12px;padding:12px;box-shadow:0 1px 3px rgba(0,0,0,0.06)}
+.metric .lbl{font-size:11px;color:#8e8e93;font-weight:500}
+.metric .val{font-size:22px;font-weight:600;margin-top:2px;letter-spacing:-0.5px}
+.list-item{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:0.5px solid rgba(0,0,0,0.08)}
+.list-item:last-child{border-bottom:none;padding-bottom:0}
+.list-item:first-child{padding-top:0}
+.empty{text-align:center;padding:40px 16px;color:#8e8e93;font-size:14px}
+.empty .ico{font-size:40px;display:block;margin-bottom:8px;opacity:0.35}
+.date-row{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.date-row input{flex:1}
+.del-btn{background:none;border:none;cursor:pointer;color:#8e8e93;padding:6px;border-radius:8px;flex-shrink:0;font-size:18px;line-height:1}
+.del-btn:active{color:#ff3b30;background:#fff0ef}
+.product-row{background:#f9f9f9;border-radius:10px;padding:10px;margin-bottom:8px;border:1px solid rgba(0,0,0,0.08)}
+.product-row-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.product-row-header span{font-size:13px;font-weight:600;color:#8e8e93}
+.pr-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.order-total{background:#e8f4fe;border-radius:10px;padding:12px;display:flex;justify-content:space-between;align-items:center;margin-top:6px}
+.order-total .lbl{font-size:13px;color:#185FA5;font-weight:500}
+.order-total .val{font-size:18px;font-weight:700;color:#185FA5}
+.toast{position:fixed;bottom:calc(env(safe-area-inset-bottom,0px) + 80px);left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.82);color:#fff;padding:10px 20px;border-radius:20px;font-size:14px;font-weight:500;opacity:0;transition:opacity 0.2s;pointer-events:none;z-index:999;white-space:nowrap;backdrop-filter:blur(10px)}
+.toast.show{opacity:1}
+@media(prefers-color-scheme:dark){
+  body{background:#1c1c1e;color:#f2f2f7}
+  .header,.nav,.card,.metric,.btn:not(.primary){background:#2c2c2e;border-color:rgba(255,255,255,0.1)}
+  .header{border-bottom-color:rgba(255,255,255,0.1)}
+  .nav{border-top-color:rgba(255,255,255,0.1)}
+  input,select{background:#3a3a3c;border-color:rgba(255,255,255,0.1);color:#f2f2f7}
+  input:focus,select:focus{background:#3a3a3c;border-color:#178CF2}
+  .product-row{background:#3a3a3c;border-color:rgba(255,255,255,0.08)}
+  .list-item{border-bottom-color:rgba(255,255,255,0.08)}
+  .order-total{background:#1a3a52}
+  .order-total .lbl,.order-total .val{color:#7ec4f8}
+  .metric .lbl,.nav button:not(.active),.sec{color:#8e8e93}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="header">
+    <h1 id="pageTitle">Özet</h1>
+    <span class="sub" id="headerDate"></span>
+  </div>
+  <div class="pages">
+    <div id="pageHome" class="page active">
+      <div class="metrics" id="homeMetrics"></div>
+      <div class="card">
+        <div class="sec">Son siparişler</div>
+        <div id="recentOrders"></div>
+      </div>
+    </div>
+    <div id="pageProducts" class="page">
+      <div class="card">
+        <div class="sec">Yeni ürün ekle</div>
+        <label>Ürün adı</label>
+        <input id="pName" placeholder="Ürün adı" autocomplete="off"/>
+        <label>Fiyat (₺)</label>
+        <input id="pPrice" type="number" min="0" placeholder="0.00" inputmode="decimal"/>
+        <label>Başlangıç stok</label>
+        <input id="pStock" type="number" min="0" placeholder="0" inputmode="numeric"/>
+        <button class="btn primary full" style="margin-top:12px" onclick="addProduct()">+ Ürün ekle</button>
+      </div>
+      <div class="card">
+        <div class="sec">Ürün listesi</div>
+        <div id="productList"></div>
+      </div>
+    </div>
+    <div id="pageOrder" class="page">
+      <div class="card">
+        <div class="sec">Sipariş bilgileri</div>
+        <label>Müşteri adı</label>
+        <input id="oCustomer" placeholder="İsteğe bağlı" autocomplete="off"/>
+        <label>Tarih</label>
+        <input id="oDate" type="date"/>
+        <label>Not</label>
+        <input id="oNote" placeholder="İsteğe bağlı" autocomplete="off"/>
+      </div>
+      <div class="card">
+        <div class="sec">Ürünler</div>
+        <div id="orderLines"></div>
+        <button class="btn full" style="margin-top:6px" onclick="addOrderLine()">+ Ürün ekle</button>
+      </div>
+      <div class="card">
+        <div class="order-total">
+          <span class="lbl">Sipariş toplamı</span>
+          <span class="val" id="orderTotalDisplay">0,00 ₺</span>
+        </div>
+        <button class="btn primary full" style="margin-top:10px" onclick="saveOrder()">✓ Siparişi kaydet</button>
+      </div>
+    </div>
+    <div id="pageReport" class="page">
+      <div class="date-row">
+        <input id="rDate" type="date" onchange="renderReport()"/>
+        <button class="btn sm" onclick="exportPDF()">↓ PDF</button>
+      </div>
+      <div id="reportContent"></div>
+    </div>
+  </div>
+  <nav class="nav">
+    <button class="active" onclick="showPage('Home',this)">
+      <svg viewBox="0 0 24 24"><path d="M3 12L12 3l9 9"/><path d="M9 21V12h6v9"/><path d="M3 12v9h18v-9"/></svg>
+      Özet
+    </button>
+    <button onclick="showPage('Products',this)">
+      <svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="12" y1="12" x2="12" y2="17"/><line x1="9.5" y1="14.5" x2="14.5" y2="14.5"/></svg>
+      Ürünler
+    </button>
+    <button onclick="showPage('Order',this)">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+      Sipariş
+    </button>
+    <button onclick="showPage('Report',this)">
+      <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="14" x2="16" y2="14"/><line x1="8" y1="18" x2="12" y2="18"/></svg>
+      Ekstre
+    </button>
+  </nav>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+let products=JSON.parse(localStorage.getItem('st_products')||'[]');
+let orders=JSON.parse(localStorage.getItem('st_orders')||'[]');
+let lineCount=0;
+
+function save(){localStorage.setItem('st_products',JSON.stringify(products));localStorage.setItem('st_orders',JSON.stringify(orders))}
+function showToast(msg,err){const t=document.getElementById('toast');t.textContent=msg;t.style.background=err?'rgba(255,59,48,0.9)':'rgba(0,0,0,0.82)';t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2200)}
+function today(){return new Date().toISOString().slice(0,10)}
+function fmtDate(d){if(!d)return'';const[y,m,day]=d.split('-');return`${day}.${m}.${y}`}
+function fmtMoney(n){return Number(n).toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2})+' ₺'}
+
+function showPage(name,btn){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav button').forEach(b=>b.classList.remove('active'));
+  document.getElementById('page'+name).classList.add('active');
+  btn.classList.add('active');
+  document.querySelector('.pages').scrollTop=0;
+  const titles={Home:'Özet',Products:'Ürünler',Order:'Sipariş Girişi',Report:'Günlük Ekstre'};
+  document.getElementById('pageTitle').textContent=titles[name];
+  if(name==='Home')renderHome();
+  if(name==='Products')renderProducts();
+  if(name==='Order')initOrderForm();
+  if(name==='Report')renderReport();
+}
+
+function renderHome(){
+  const ts=today();
+  const to=orders.filter(o=>o.date===ts);
+  const tr=to.reduce((s,o)=>s+o.lines.reduce((ls,l)=>ls+l.qty*l.price,0),0);
+  const allR=orders.reduce((s,o)=>s+o.lines.reduce((ls,l)=>ls+l.qty*l.price,0),0);
+  document.getElementById('homeMetrics').innerHTML=`
+    <div class="metric"><div class="lbl">Bugünkü ciro</div><div class="val" style="font-size:18px">${fmtMoney(tr)}</div></div>
+    <div class="metric"><div class="lbl">Bugünkü sipariş</div><div class="val">${to.length}</div></div>
+    <div class="metric"><div class="lbl">Toplam ciro</div><div class="val" style="font-size:18px">${fmtMoney(allR)}</div></div>
+    <div class="metric"><div class="lbl">Toplam sipariş</div><div class="val">${orders.length}</div></div>`;
+  const rec=[...orders].sort((a,b)=>b.id-a.id).slice(0,5);
+  const el=document.getElementById('recentOrders');
+  if(!rec.length){el.innerHTML='<div class="empty"><span class="ico">🛒</span>Henüz sipariş yok</div>';return}
+  el.innerHTML=rec.map(o=>{
+    const tot=o.lines.reduce((s,l)=>s+l.qty*l.price,0);
+    const names=o.lines.map(l=>l.product).join(', ');
+    return`<div class="list-item"><div style="min-width:0;flex:1;margin-right:8px"><div style="font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${names}</div><div style="font-size:12px;color:#8e8e93">${o.customer||'—'} · ${fmtDate(o.date)}</div></div><div style="text-align:right;flex-shrink:0"><div style="font-size:14px;font-weight:600">${fmtMoney(tot)}</div><div style="font-size:12px;color:#8e8e93">${o.lines.length} kalem</div></div></div>`;
+  }).join('')
+}
+
+function renderProducts(){
+  const el=document.getElementById('productList');
+  if(!products.length){el.innerHTML='<div class="empty"><span class="ico">📦</span>Ürün eklenmemiş</div>';return}
+  el.innerHTML=products.map((p,i)=>`
+    <div class="list-item">
+      <div><div style="font-size:15px;font-weight:500">${p.name}</div>
+      <div style="font-size:12px;color:${p.stock<=0?'#ff3b30':'#8e8e93'}">${fmtMoney(p.price)} · Stok: ${p.stock}</div></div>
+      <button class="del-btn" onclick="deleteProduct(${i})">🗑</button>
+    </div>`).join('')
+}
+
+function addProduct(){
+  const name=document.getElementById('pName').value.trim();
+  const price=parseFloat(document.getElementById('pPrice').value)||0;
+  const stock=parseInt(document.getElementById('pStock').value)||0;
+  if(!name){showToast('Ürün adı gerekli',true);return}
+  products.push({name,price,stock,id:Date.now()});save();
+  document.getElementById('pName').value='';document.getElementById('pPrice').value='';document.getElementById('pStock').value='';
+  renderProducts();showToast('Ürün eklendi ✓')
+}
+
+function deleteProduct(i){
+  if(!confirm('Bu ürünü silmek istediğinize emin misiniz?'))return;
+  products.splice(i,1);save();renderProducts();showToast('Ürün silindi')
+}
+
+function productOptions(sel){
+  return'<option value="">— Ürün seç —</option>'+products.map(p=>`<option value="${p.name}" data-price="${p.price}"${p.name===sel?' selected':''}>${p.name} (${fmtMoney(p.price)})</option>`).join('')
+}
+
+function initOrderForm(){
+  lineCount=0;
+  document.getElementById('oCustomer').value='';
+  document.getElementById('oNote').value='';
+  document.getElementById('oDate').value=today();
+  document.getElementById('orderLines').innerHTML='';
+  addOrderLine();updateOrderTotal()
+}
+
+function addOrderLine(){
+  lineCount++;
+  const id=lineCount;
+  const div=document.createElement('div');
+  div.className='product-row';div.id='line_'+id;
+  div.innerHTML=`<div class="product-row-header"><span>Ürün ${id}</span><button class="del-btn" onclick="removeLine(${id})">✕</button></div>
+    <select onchange="lineChanged(this,${id})">${productOptions('')}</select>
+    <div class="pr-grid" style="margin-top:8px">
+      <div><label style="margin-top:0">Adet</label><input type="number" min="1" value="1" id="lQty_${id}" inputmode="numeric" oninput="updateOrderTotal()"/></div>
+      <div><label style="margin-top:0">Fiyat (₺)</label><input type="number" min="0" placeholder="0.00" id="lPrice_${id}" inputmode="decimal" oninput="updateOrderTotal()"/></div>
+    </div>`;
+  document.getElementById('orderLines').appendChild(div);updateOrderTotal()
+}
+
+function lineChanged(sel,id){
+  const opt=sel.options[sel.selectedIndex];
+  if(opt&&opt.dataset.price)document.getElementById('lPrice_'+id).value=opt.dataset.price;
+  updateOrderTotal()
+}
+
+function removeLine(id){
+  const el=document.getElementById('line_'+id);if(el)el.remove();
+  updateOrderTotal();renumberLines()
+}
+
+function renumberLines(){
+  document.querySelectorAll('.product-row').forEach((row,i)=>{
+    const s=row.querySelector('.product-row-header span');if(s)s.textContent='Ürün '+(i+1)
+  })
+}
+
+function updateOrderTotal(){
+  let t=0;
+  document.querySelectorAll('.product-row').forEach(row=>{
+    const id=row.id.replace('line_','');
+    const q=parseFloat(document.getElementById('lQty_'+id)?.value)||0;
+    const p=parseFloat(document.getElementById('lPrice_'+id)?.value)||0;
+    t+=q*p
+  });
+  document.getElementById('orderTotalDisplay').textContent=fmtMoney(t)
+}
+
+function saveOrder(){
+  const customer=document.getElementById('oCustomer').value.trim();
+  const date=document.getElementById('oDate').value||today();
+  const note=document.getElementById('oNote').value.trim();
+  const lines=[];let err=false;
+  document.querySelectorAll('.product-row').forEach(row=>{
+    if(err)return;
+    const id=row.id.replace('line_','');
+    const product=row.querySelector('select').value;
+    const qty=parseInt(document.getElementById('lQty_'+id)?.value)||0;
+    const price=parseFloat(document.getElementById('lPrice_'+id)?.value)||0;
+    if(!product){showToast('Tüm kalemlerde ürün seçin',true);err=true;return}
+    if(qty<=0){showToast('Adet sıfırdan büyük olmalı',true);err=true;return}
+    if(price<=0){showToast('Fiyat sıfırdan büyük olmalı',true);err=true;return}
+    lines.push({product,qty,price})
+  });
+  if(err||!lines.length)return;
+  for(const l of lines){const p=products.find(x=>x.name===l.product);if(p&&p.stock<l.qty){showToast(l.product+': yetersiz stok!',true);return}}
+  for(const l of lines){const p=products.find(x=>x.name===l.product);if(p)p.stock-=l.qty}
+  orders.push({id:Date.now(),customer,date,note,time:new Date().toTimeString().slice(0,5),lines});
+  save();showToast('Sipariş kaydedildi ✓');initOrderForm()
+}
+
+function renderReport(){
+  const d=document.getElementById('rDate').value;
+  if(!d){document.getElementById('reportContent').innerHTML='<div class="card"><div class="empty"><span class="ico">📅</span>Tarih seçiniz</div></div>';return}
+  const dayO=orders.filter(o=>o.date===d);
+  const total=dayO.reduce((s,o)=>s+o.lines.reduce((ls,l)=>ls+l.qty*l.price,0),0);
+  const byP={};
+  dayO.forEach(o=>o.lines.forEach(l=>{if(!byP[l.product])byP[l.product]={qty:0,total:0};byP[l.product].qty+=l.qty;byP[l.product].total+=l.qty*l.price}));
+  let html=`<div class="card"><div class="metrics" style="margin-bottom:0">
+    <div class="metric"><div class="lbl">Toplam ciro</div><div class="val" style="font-size:18px">${fmtMoney(total)}</div></div>
+    <div class="metric"><div class="lbl">Sipariş sayısı</div><div class="val">${dayO.length}</div></div></div>`;
+  if(Object.keys(byP).length){
+    html+=`<div class="sec" style="margin-top:14px">Ürün bazında özet</div>`;
+    html+=Object.entries(byP).map(([n,v])=>`<div class="list-item"><div style="font-size:14px">${n}</div><div style="text-align:right"><div style="font-size:14px;font-weight:600">${fmtMoney(v.total)}</div><div style="font-size:12px;color:#8e8e93">${v.qty} adet</div></div></div>`).join('')
+  }
+  html+='</div>';
+  if(dayO.length){
+    html+=`<div class="card"><div class="sec">Sipariş detayı</div>`;
+    html+=dayO.map((o,oi)=>{
+      const ot=o.lines.reduce((s,l)=>s+l.qty*l.price,0);
+      return`<div style="padding:10px 0;border-bottom:0.5px solid rgba(0,0,0,0.08)">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+          <div><div style="font-size:15px;font-weight:600">${o.customer||'İsimsiz'}</div><div style="font-size:12px;color:#8e8e93">${o.time||''} · ${o.lines.length} kalem</div></div>
+          <div style="display:flex;align-items:center;gap:6px"><span style="font-size:15px;font-weight:600">${fmtMoney(ot)}</span><button class="del-btn" onclick="deleteOrder(${oi})">🗑</button></div>
+        </div>
+        ${o.lines.map(l=>`<div style="display:flex;justify-content:space-between;padding:4px 0 4px 10px;border-bottom:0.5px solid rgba(0,0,0,0.05)"><span style="font-size:13px">${l.product}</span><span style="font-size:12px;color:#8e8e93">${l.qty} × ${fmtMoney(l.price)} = ${fmtMoney(l.qty*l.price)}</span></div>`).join('')}
+        ${o.note?`<div style="font-size:12px;color:#8e8e93;margin-top:4px;padding-left:10px">${o.note}</div>`:''}
+      </div>`
+    }).join('');
+    html+='</div>'
+  } else {
+    html+='<div class="card"><div class="empty"><span class="ico">📭</span>Bu tarihte sipariş yok</div></div>'
+  }
+  document.getElementById('reportContent').innerHTML=html
+}
+
+function deleteOrder(di){
+  const d=document.getElementById('rDate').value;
+  const dayO=orders.filter(o=>o.date===d);
+  const order=dayO[di];
+  if(!order||!confirm('Bu siparişi silmek istiyor musunuz?'))return;
+  order.lines.forEach(l=>{const p=products.find(x=>x.name===l.product);if(p)p.stock+=l.qty});
+  orders.splice(orders.indexOf(order),1);save();renderReport();showToast('Sipariş silindi')
+}
+
+function exportPDF(){
+  const d=document.getElementById('rDate').value;
+  if(!d){showToast('Önce tarih seçin',true);return}
+  const dayO=orders.filter(o=>o.date===d);
+  const total=dayO.reduce((s,o)=>s+o.lines.reduce((ls,l)=>ls+l.qty*l.price,0),0);
+  let rows='';
+  dayO.forEach(o=>{
+    const ot=o.lines.reduce((s,l)=>s+l.qty*l.price,0);
+    o.lines.forEach((l,li)=>{
+      rows+=`<tr>${li===0?`<td rowspan="${o.lines.length}" style="vertical-align:top">${o.customer||'—'}<br><small>${o.time||''}</small></td>`:''}<td>${l.product}</td><td style="text-align:center">${l.qty}</td><td style="text-align:right">${Number(l.price).toLocaleString('tr-TR',{minimumFractionDigits:2})} ₺</td><td style="text-align:right">${Number(l.qty*l.price).toLocaleString('tr-TR',{minimumFractionDigits:2})} ₺</td></tr>`
+    });
+    if(o.lines.length>1)rows+=`<tr><td colspan="3" style="text-align:right;color:#666;font-size:12px">Sipariş toplamı</td><td style="text-align:right;font-weight:700">${Number(ot).toLocaleString('tr-TR',{minimumFractionDigits:2})} ₺</td></tr>`;
+    rows+=`<tr><td colspan="4" style="border:none;height:8px"></td></tr>`
+  });
+  const html=`<!DOCTYPE html><html lang="tr"><head><meta charset="UTF-8"><title>Ekstre ${fmtDate(d)}</title><style>body{font-family:Arial,sans-serif;padding:24px;color:#111;font-size:13px}h1{font-size:20px;margin-bottom:2px}.sub{color:#666;margin-bottom:20px}table{width:100%;border-collapse:collapse}th{background:#f5f5f5;padding:8px 10px;text-align:left;font-weight:600;border-bottom:2px solid #ddd}td{padding:6px 10px;border-bottom:0.5px solid #eee}.total{text-align:right;margin-top:16px;font-size:15px;font-weight:700}@media print{body{padding:8px}}</style></head><body><h1>Günlük Satış Ekstresi</h1><div class="sub">${fmtDate(d)} &nbsp;·&nbsp; ${dayO.length} sipariş</div><table><thead><tr><th>Müşteri</th><th>Ürün</th><th style="text-align:center">Adet</th><th style="text-align:right">Birim fiyat</th><th style="text-align:right">Toplam</th></tr></thead><tbody>${rows||'<tr><td colspan="5" style="text-align:center;padding:20px;color:#999">Sipariş bulunamadı</td></tr>'}</tbody></table><div class="total">Genel toplam: ${Number(total).toLocaleString('tr-TR',{minimumFractionDigits:2})} ₺</div></body></html>`;
+  const blob=new Blob([html],{type:'text/html'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.download=`ekstre_${d}.html`;a.click();URL.revokeObjectURL(url);
+  showToast('Ekstre indirildi')
+}
+
+document.getElementById('headerDate').textContent=new Date().toLocaleDateString('tr-TR',{day:'numeric',month:'long'});
+document.getElementById('rDate').value=today();
+renderHome();
+
+const manifest={name:'Satış Takip',short_name:'Satış',start_url:'./',display:'standalone',background_color:'#f2f2f7',theme_color:'#178CF2',orientation:'portrait',icons:[{src:'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><rect width="512" height="512" rx="100" fill="%23178CF2"/><text y="340" x="256" text-anchor="middle" font-size="280" font-family="Arial" fill="white">₺</text></svg>',sizes:'512x512',type:'image/svg+xml'}]};
+const blob=new Blob([JSON.stringify(manifest)],{type:'application/manifest+json'});
+document.getElementById('manifestLink').href=URL.createObjectURL(blob);
+
+if('serviceWorker' in navigator){
+  const swCode=`self.addEventListener('install',e=>e.waitUntil(caches.open('satis-v1').then(c=>c.addAll(['./',location.href]))));self.addEventListener('fetch',e=>e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request))))`;
+  const swBlob=new Blob([swCode],{type:'application/javascript'});
+  navigator.serviceWorker.register(URL.createObjectURL(swBlob)).catch(()=>{});
+}
+</script>
+</body>
+</html>
