@@ -10,44 +10,35 @@
 <meta name="theme-color" content="#5B6AF0">
 <title>Satış Takip</title>
 <link rel="manifest" id="manifestLink">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;overflow:hidden}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#F0F2FF;color:#1a1a2e}
-
 .app{height:100%;display:flex;flex-direction:column;max-width:480px;margin:0 auto}
-
 .header{background:linear-gradient(135deg,#5B6AF0,#7C3AED);padding:env(safe-area-inset-top,14px) 16px 14px;padding-top:calc(env(safe-area-inset-top,0px) + 14px);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
 .header h1{font-size:17px;font-weight:700;color:#fff;letter-spacing:-0.3px}
 .header .sub{font-size:12px;color:rgba(255,255,255,0.75)}
-
 .pages{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}
 .page{display:none;padding:14px;padding-bottom:16px}
 .page.active{display:block}
-
-.nav{display:flex;background:#fff;border-top:1px solid #e8eaf6;flex-shrink:0;padding:6px 0 calc(env(safe-area-inset-bottom,0px) + 6px)}
-.nav button{flex:1;padding:6px 4px 4px;border:none;background:none;cursor:pointer;font-size:10px;color:#9094B0;display:flex;flex-direction:column;align-items:center;gap:3px;font-family:inherit;transition:color 0.15s;font-weight:500}
+.nav{display:flex;background:#fff;border-top:1px solid #e8eaf6;flex-shrink:0;padding:6px 0 calc(env(safe-area-inset-bottom,0px) + 2px)}
+.nav button{flex:1;padding:5px 4px 3px;border:none;background:none;cursor:pointer;font-size:10px;color:#9094B0;display:flex;flex-direction:column;align-items:center;gap:3px;font-family:inherit;transition:color 0.15s;font-weight:500}
 .nav button.active{color:#5B6AF0}
 .nav button svg{width:22px;height:22px;stroke:currentColor;stroke-width:1.8;fill:none;stroke-linecap:round;stroke-linejoin:round}
 .nav button.active svg{stroke-width:2.2}
-
 .card{background:#fff;border-radius:16px;padding:16px;margin-bottom:12px;box-shadow:0 2px 8px rgba(91,106,240,0.07)}
-
 .sec{font-size:11px;font-weight:700;color:#9094B0;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:12px}
-
 label{font-size:13px;color:#6B7280;display:block;margin-bottom:5px;margin-top:14px;font-weight:500}
 label:first-of-type{margin-top:0}
-
-input,select{width:100%;padding:11px 14px;border:1.5px solid #E8EAF6;border-radius:12px;font-size:15px;background:#F8F9FF;color:#1a1a2e;font-family:inherit;appearance:none;-webkit-appearance:none;transition:border-color 0.15s,background 0.15s}
+input,select{width:100%;padding:11px 14px;border:1.5px solid #E8EAF6;border-radius:12px;font-size:15px;background:#F8F9FF;color:#1a1a2e;font-family:inherit;appearance:none;-webkit-appearance:none;transition:border-color 0.15s}
 input:focus,select:focus{outline:none;border-color:#5B6AF0;background:#fff}
 input::placeholder{color:#B0B4CC}
-
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:12px 16px;border-radius:12px;border:1.5px solid #E8EAF6;background:#fff;color:#1a1a2e;font-size:15px;cursor:pointer;font-family:inherit;font-weight:600;transition:all 0.15s}
 .btn:active{opacity:0.75;transform:scale(0.98)}
 .btn.primary{background:linear-gradient(135deg,#5B6AF0,#7C3AED);color:#fff;border-color:transparent;box-shadow:0 4px 12px rgba(91,106,240,0.3)}
 .btn.full{width:100%}
 .btn.sm{padding:8px 14px;font-size:13px}
-
 .metrics{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
 .metric{background:#fff;border-radius:16px;padding:14px;box-shadow:0 2px 8px rgba(91,106,240,0.07)}
 .metric .lbl{font-size:11px;color:#9094B0;font-weight:600;text-transform:uppercase;letter-spacing:0.04em}
@@ -55,38 +46,29 @@ input::placeholder{color:#B0B4CC}
 .metric.accent{background:linear-gradient(135deg,#5B6AF0,#7C3AED)}
 .metric.accent .lbl{color:rgba(255,255,255,0.75)}
 .metric.accent .val{color:#fff}
-
 .list-item{display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:1px solid #F0F2FF}
 .list-item:last-child{border-bottom:none;padding-bottom:0}
 .list-item:first-child{padding-top:0}
-
 .empty{text-align:center;padding:40px 16px;color:#B0B4CC;font-size:14px}
 .empty .ico{font-size:38px;display:block;margin-bottom:10px;opacity:0.5}
-
 .date-row{display:flex;align-items:center;gap:8px;margin-bottom:12px}
 .date-row input{flex:1}
-
-.del-btn{background:none;border:none;cursor:pointer;color:#B0B4CC;padding:6px;border-radius:8px;flex-shrink:0;font-size:17px;line-height:1;transition:all 0.15s}
-.del-btn:active{color:#EF4444;background:#FEF2F2}
-
+.del-btn{background:none;border:none;cursor:pointer;color:#B0B4CC;padding:6px;border-radius:8px;flex-shrink:0;font-size:17px;line-height:1}
+.del-btn:active{color:#EF4444}
 .product-row{background:#F8F9FF;border-radius:12px;padding:12px;margin-bottom:8px;border:1.5px solid #E8EAF6}
 .product-row-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
 .product-row-header span{font-size:12px;font-weight:700;color:#5B6AF0;text-transform:uppercase;letter-spacing:0.05em}
 .pr-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-
 .order-total{background:linear-gradient(135deg,#EEF0FF,#F3EEFF);border-radius:12px;padding:14px;display:flex;justify-content:space-between;align-items:center;margin-top:6px;border:1.5px solid #DDE0FF}
 .order-total .lbl{font-size:13px;color:#5B6AF0;font-weight:600}
 .order-total .val{font-size:20px;font-weight:700;color:#5B6AF0}
-
 .badge-stock{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600}
 .badge-ok{background:#ECFDF5;color:#059669}
 .badge-low{background:#FEF9C3;color:#D97706}
 .badge-zero{background:#FEF2F2;color:#EF4444}
-
 .toast{position:fixed;bottom:calc(env(safe-area-inset-bottom,0px) + 80px);left:50%;transform:translateX(-50%);background:rgba(26,26,46,0.9);color:#fff;padding:10px 20px;border-radius:20px;font-size:14px;font-weight:600;opacity:0;transition:opacity 0.2s;pointer-events:none;z-index:999;white-space:nowrap}
 .toast.show{opacity:1}
 .toast.err{background:rgba(239,68,68,0.92)}
-
 @media(prefers-color-scheme:dark){
   body{background:#13131f;color:#f0f0ff}
   .header{background:linear-gradient(135deg,#3d4db8,#5a2db0)}
@@ -100,8 +82,7 @@ input::placeholder{color:#B0B4CC}
   .list-item{border-bottom-color:#252538}
   .order-total{background:linear-gradient(135deg,#1e2048,#221a3a);border-color:#3a3a60}
   .metric .val{color:#f0f0ff}
-  .metrics .metric{box-shadow:none}
-  .card{box-shadow:none}
+  .card,.metric{box-shadow:none}
 }
 </style>
 </head>
@@ -119,7 +100,6 @@ input::placeholder{color:#B0B4CC}
         <div id="recentOrders"></div>
       </div>
     </div>
-
     <div id="pageProducts" class="page">
       <div class="card">
         <div class="sec">Yeni ürün ekle</div>
@@ -136,7 +116,6 @@ input::placeholder{color:#B0B4CC}
         <div id="productList"></div>
       </div>
     </div>
-
     <div id="pageOrder" class="page">
       <div class="card">
         <div class="sec">Sipariş bilgileri</div>
@@ -160,52 +139,37 @@ input::placeholder{color:#B0B4CC}
         <button class="btn primary full" style="margin-top:12px" onclick="saveOrder()">✓ Siparişi Kaydet</button>
       </div>
     </div>
-
     <div id="pageReport" class="page">
       <div class="date-row">
         <input id="rDate" type="date" onchange="renderReport()"/>
-        <button class="btn sm" onclick="exportPDF()">↓ PDF</button>
+        <button class="btn sm primary" onclick="sharePDF()">↑ Paylaş</button>
       </div>
       <div id="reportContent"></div>
     </div>
   </div>
-
   <nav class="nav">
     <button class="active" onclick="showPage('Home',this)">
-      <svg viewBox="0 0 24 24"><path d="M3 12L12 3l9 9"/><path d="M9 21V12h6v9"/><path d="M3 12v9h18v-9"/></svg>
-      Özet
+      <svg viewBox="0 0 24 24"><path d="M3 12L12 3l9 9"/><path d="M9 21V12h6v9"/><path d="M3 12v9h18v-9"/></svg>Özet
     </button>
     <button onclick="showPage('Products',this)">
-      <svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="12" y1="12" x2="12" y2="17"/><line x1="9.5" y1="14.5" x2="14.5" y2="14.5"/></svg>
-      Ürünler
+      <svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="12" y1="12" x2="12" y2="17"/><line x1="9.5" y1="14.5" x2="14.5" y2="14.5"/></svg>Ürünler
     </button>
     <button onclick="showPage('Order',this)">
-      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
-      Sipariş
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>Sipariş
     </button>
     <button onclick="showPage('Report',this)">
-      <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="14" x2="16" y2="14"/><line x1="8" y1="18" x2="12" y2="18"/></svg>
-      Ekstre
+      <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="14" x2="16" y2="14"/><line x1="8" y1="18" x2="12" y2="18"/></svg>Ekstre
     </button>
   </nav>
 </div>
 <div class="toast" id="toast"></div>
-
 <script>
 let products=JSON.parse(localStorage.getItem('st_products')||'[]');
 let orders=JSON.parse(localStorage.getItem('st_orders')||'[]');
 let lineCount=0;
 
 function save(){localStorage.setItem('st_products',JSON.stringify(products));localStorage.setItem('st_orders',JSON.stringify(orders))}
-
-function showToast(msg,err){
-  const t=document.getElementById('toast');
-  t.textContent=msg;
-  t.className='toast'+(err?' err':'');
-  t.classList.add('show');
-  setTimeout(()=>t.classList.remove('show'),2200)
-}
-
+function showToast(msg,err){const t=document.getElementById('toast');t.textContent=msg;t.className='toast'+(err?' err':'');t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2400)}
 function today(){return new Date().toISOString().slice(0,10)}
 function fmtDate(d){if(!d)return'';const[y,m,day]=d.split('-');return`${day}.${m}.${y}`}
 function fmtMoney(n){return Number(n).toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2})+' ₺'}
@@ -244,10 +208,10 @@ function renderHome(){
   }).join('')
 }
 
-function stockBadge(stock){
-  if(stock<=0)return`<span class="badge-stock badge-zero">Stok yok</span>`;
-  if(stock<=3)return`<span class="badge-stock badge-low">Stok: ${stock}</span>`;
-  return`<span class="badge-stock badge-ok">Stok: ${stock}</span>`;
+function stockBadge(s){
+  if(s<=0)return`<span class="badge-stock badge-zero">Stok yok</span>`;
+  if(s<=3)return`<span class="badge-stock badge-low">Stok: ${s}</span>`;
+  return`<span class="badge-stock badge-ok">Stok: ${s}</span>`;
 }
 
 function renderProducts(){
@@ -290,8 +254,7 @@ function initOrderForm(){
 }
 
 function addOrderLine(){
-  lineCount++;
-  const id=lineCount;
+  lineCount++;const id=lineCount;
   const div=document.createElement('div');
   div.className='product-row';div.id='line_'+id;
   div.innerHTML=`<div class="product-row-header"><span>Ürün ${id}</span><button class="del-btn" onclick="removeLine(${id})">✕</button></div>
@@ -310,13 +273,13 @@ function lineChanged(sel,id){
 }
 
 function removeLine(id){
-  const el=document.getElementById('line_'+id);if(el)el.remove();
+  document.getElementById('line_'+id)?.remove();
   updateOrderTotal();renumberLines()
 }
 
 function renumberLines(){
-  document.querySelectorAll('.product-row').forEach((row,i)=>{
-    const s=row.querySelector('.product-row-header span');if(s)s.textContent='Ürün '+(i+1)
+  document.querySelectorAll('.product-row').forEach((r,i)=>{
+    const s=r.querySelector('.product-row-header span');if(s)s.textContent='Ürün '+(i+1)
   })
 }
 
@@ -324,9 +287,7 @@ function updateOrderTotal(){
   let t=0;
   document.querySelectorAll('.product-row').forEach(row=>{
     const id=row.id.replace('line_','');
-    const q=parseFloat(document.getElementById('lQty_'+id)?.value)||0;
-    const p=parseFloat(document.getElementById('lPrice_'+id)?.value)||0;
-    t+=q*p
+    t+=(parseFloat(document.getElementById('lQty_'+id)?.value)||0)*(parseFloat(document.getElementById('lPrice_'+id)?.value)||0)
   });
   document.getElementById('orderTotalDisplay').textContent=fmtMoney(t)
 }
@@ -398,39 +359,123 @@ function deleteOrder(di){
   orders.splice(orders.indexOf(order),1);save();renderReport();showToast('Sipariş silindi')
 }
 
-function exportPDF(){
+async function sharePDF(){
   const d=document.getElementById('rDate').value;
   if(!d){showToast('Önce tarih seçin',true);return}
+  if(typeof window.jspdf==='undefined'){showToast('PDF kütüphanesi yükleniyor…');return}
+
+  const {jsPDF}=window.jspdf;
+  const doc=new jsPDF({orientation:'p',unit:'mm',format:'a4'});
   const dayO=orders.filter(o=>o.date===d);
   const total=dayO.reduce((s,o)=>s+o.lines.reduce((ls,l)=>ls+l.qty*l.price,0),0);
-  let rows='';
-  dayO.forEach(o=>{
-    const ot=o.lines.reduce((s,l)=>s+l.qty*l.price,0);
-    o.lines.forEach((l,li)=>{
-      rows+=`<tr>${li===0?`<td rowspan="${o.lines.length}" style="vertical-align:top">${o.customer||'—'}<br><small>${o.time||''}</small></td>`:''}<td>${l.product}</td><td style="text-align:center">${l.qty}</td><td style="text-align:right">${Number(l.price).toLocaleString('tr-TR',{minimumFractionDigits:2})} ₺</td><td style="text-align:right">${Number(l.qty*l.price).toLocaleString('tr-TR',{minimumFractionDigits:2})} ₺</td></tr>`
+
+  // Renk paleti
+  const purple=[91,106,240];
+  const dark=[26,26,46];
+  const gray=[144,148,176];
+  const lightBg=[240,242,255];
+
+  // Başlık bandı
+  doc.setFillColor(...purple);
+  doc.rect(0,0,210,28,'F');
+  doc.setTextColor(255,255,255);
+  doc.setFontSize(16);doc.setFont('helvetica','bold');
+  doc.text('GUNLUK SATIS EKSTRESI',14,12);
+  doc.setFontSize(10);doc.setFont('helvetica','normal');
+  doc.text(fmtDate(d)+'   |   '+dayO.length+' siparis   |   Toplam: '+fmtMoney(total),14,22);
+
+  let y=36;
+
+  // Ürün özeti
+  if(dayO.length){
+    const byP={};
+    dayO.forEach(o=>o.lines.forEach(l=>{if(!byP[l.product])byP[l.product]={qty:0,total:0};byP[l.product].qty+=l.qty;byP[l.product].total+=l.qty*l.price}));
+    doc.setFillColor(...lightBg);
+    doc.rect(14,y,182,8,'F');
+    doc.setTextColor(...purple);doc.setFontSize(9);doc.setFont('helvetica','bold');
+    doc.text('URUN',16,y+5.5);
+    doc.text('ADET',120,y+5.5);
+    doc.text('TOPLAM',160,y+5.5);
+    y+=10;
+    Object.entries(byP).forEach(([name,v])=>{
+      doc.setTextColor(...dark);doc.setFontSize(9);doc.setFont('helvetica','normal');
+      doc.text(name.substring(0,35),16,y+4);
+      doc.text(String(v.qty),120,y+4);
+      doc.setFont('helvetica','bold');doc.setTextColor(...purple);
+      doc.text(fmtMoney(v.total),160,y+4);
+      y+=8;
+      doc.setDrawColor(220,222,255);doc.line(14,y-1,196,y-1);
     });
-    if(o.lines.length>1)rows+=`<tr><td colspan="3" style="text-align:right;color:#666;font-size:12px">Sipariş toplamı</td><td style="text-align:right;font-weight:700">${Number(ot).toLocaleString('tr-TR',{minimumFractionDigits:2})} ₺</td></tr>`;
-    rows+=`<tr><td colspan="4" style="border:none;height:8px"></td></tr>`
+    y+=4;
+  }
+
+  // Sipariş detayları
+  dayO.forEach((o,oi)=>{
+    if(y>260){doc.addPage();y=14}
+    const ot=o.lines.reduce((s,l)=>s+l.qty*l.price,0);
+    doc.setFillColor(...purple);
+    doc.rect(14,y,182,7,'F');
+    doc.setTextColor(255,255,255);doc.setFontSize(9);doc.setFont('helvetica','bold');
+    const cust=(o.customer||'Isimsiz')+' — '+o.time;
+    doc.text(cust,16,y+5);
+    doc.text(fmtMoney(ot),175,y+5,{align:'right'});
+    y+=9;
+    o.lines.forEach(l=>{
+      if(y>270){doc.addPage();y=14}
+      doc.setTextColor(...dark);doc.setFontSize(9);doc.setFont('helvetica','normal');
+      doc.text(l.product.substring(0,30),20,y+4);
+      doc.setTextColor(...gray);
+      doc.text(l.qty+' x '+fmtMoney(l.price),100,y+4);
+      doc.setTextColor(...purple);doc.setFont('helvetica','bold');
+      doc.text(fmtMoney(l.qty*l.price),175,y+4,{align:'right'});
+      y+=7;
+      doc.setDrawColor(235,237,255);doc.line(14,y-1,196,y-1);
+    });
+    if(o.note){doc.setTextColor(...gray);doc.setFontSize(8);doc.setFont('helvetica','italic');doc.text('Not: '+o.note,20,y+3);y+=6}
+    y+=3;
   });
-  const html=`<!DOCTYPE html><html lang="tr"><head><meta charset="UTF-8"><title>Ekstre ${fmtDate(d)}</title><style>body{font-family:Arial,sans-serif;padding:24px;color:#111;font-size:13px}h1{font-size:20px;margin-bottom:2px;color:#5B6AF0}.sub{color:#666;margin-bottom:20px}table{width:100%;border-collapse:collapse}th{background:#F0F2FF;padding:8px 10px;text-align:left;font-weight:700;border-bottom:2px solid #5B6AF0;color:#5B6AF0}td{padding:6px 10px;border-bottom:0.5px solid #eee}.total{text-align:right;margin-top:16px;font-size:15px;font-weight:700;color:#5B6AF0}@media print{body{padding:8px}}</style></head><body><h1>Günlük Satış Ekstresi</h1><div class="sub">${fmtDate(d)} &nbsp;·&nbsp; ${dayO.length} sipariş</div><table><thead><tr><th>Müşteri</th><th>Ürün</th><th style="text-align:center">Adet</th><th style="text-align:right">Birim fiyat</th><th style="text-align:right">Toplam</th></tr></thead><tbody>${rows||'<tr><td colspan="5" style="text-align:center;padding:20px;color:#999">Sipariş bulunamadı</td></tr>'}</tbody></table><div class="total">Genel toplam: ${Number(total).toLocaleString('tr-TR',{minimumFractionDigits:2})} ₺</div></body></html>`;
-  const blob=new Blob([html],{type:'text/html'});
+
+  // Alt toplam
+  y+=2;
+  doc.setFillColor(...purple);doc.rect(14,y,182,10,'F');
+  doc.setTextColor(255,255,255);doc.setFontSize(11);doc.setFont('helvetica','bold');
+  doc.text('GENEL TOPLAM',16,y+7);
+  doc.text(fmtMoney(total),175,y+7,{align:'right'});
+
+  // PDF blob → paylaşım
+  const pdfBlob=doc.output('blob');
+  const fileName='ekstre_'+d+'.pdf';
+  const file=new File([pdfBlob],fileName,{type:'application/pdf'});
+
+  if(navigator.share&&navigator.canShare&&navigator.canShare({files:[file]})){
+    try{
+      await navigator.share({title:'Satış Ekstresi '+fmtDate(d),files:[file]});
+    }catch(e){
+      if(e.name!=='AbortError')fallbackDownload(pdfBlob,fileName);
+    }
+  } else {
+    fallbackDownload(pdfBlob,fileName);
+  }
+}
+
+function fallbackDownload(blob,name){
   const url=URL.createObjectURL(blob);
-  const a=document.createElement('a');a.href=url;a.download=`ekstre_${d}.html`;a.click();URL.revokeObjectURL(url);
-  showToast('Ekstre indirildi')
+  const a=document.createElement('a');a.href=url;a.download=name;a.click();
+  URL.revokeObjectURL(url);
+  showToast('PDF indirildi')
 }
 
 document.getElementById('headerDate').textContent=new Date().toLocaleDateString('tr-TR',{day:'numeric',month:'long'});
 document.getElementById('rDate').value=today();
 renderHome();
 
-const manifest={name:'Satış Takip',short_name:'Satış',start_url:'./',display:'standalone',background_color:'#F0F2FF',theme_color:'#5B6AF0',orientation:'portrait',icons:[{src:'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><rect width="512" height="512" rx="100" fill="%235B6AF0"/><text y="340" x="256" text-anchor="middle" font-size="280" font-family="Arial" fill="white">₺</text></svg>',sizes:'512x512',type:'image/svg+xml'}]};
+const manifest={name:'Satış Takip',short_name:'Satış',start_url:'./',display:'standalone',background_color:'#F0F2FF',theme_color:'#5B6AF0',orientation:'portrait',icons:[{src:'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><rect width="512" height="512" rx="100" fill="%235B6AF0"/><text y="340" x="256" text-anchor="middle" font-size="280" font-family="Arial" fill="white">%E2%82%BA</text></svg>',sizes:'512x512',type:'image/svg+xml'}]};
 const mb=new Blob([JSON.stringify(manifest)],{type:'application/manifest+json'});
 document.getElementById('manifestLink').href=URL.createObjectURL(mb);
 
 if('serviceWorker' in navigator){
-  const sw=`self.addEventListener('install',e=>e.waitUntil(caches.open('satis-v2').then(c=>c.addAll(['./',location.href]))));self.addEventListener('fetch',e=>e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request))))`;
-  const sb=new Blob([sw],{type:'application/javascript'});
-  navigator.serviceWorker.register(URL.createObjectURL(sb)).catch(()=>{});
+  const sw=`self.addEventListener('install',e=>e.waitUntil(caches.open('satis-v3').then(c=>c.addAll(['./',location.href]))));self.addEventListener('fetch',e=>e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request))))`;
+  navigator.serviceWorker.register(URL.createObjectURL(new Blob([sw],{type:'application/javascript'}))).catch(()=>{});
 }
 </script>
 </body>
