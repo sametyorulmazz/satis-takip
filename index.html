@@ -926,18 +926,6 @@ function renderReport(){
   } else {
     html+='<div class="card"><div class="empty"><span class="ico">📭</span>Bu filtrede sipariş yok</div></div>'
   }
-  // Günlük masraf notu ekle
-  const dayExpList=expenses.filter(e=>e.date===d);
-  if(dayExpList.length){
-    const expTotal=dayExpList.reduce((s,e)=>s+e.amount,0);
-    html+=`<div class="card" style="border:1.5px solid #FECACA">
-      <div class="sec" style="color:#EF4444">📝 Günlük masraflar (bilgi amaçlı)</div>
-      ${dayExpList.map(e=>`<div class="list-item"><div style="font-size:14px">${e.desc}</div><div style="font-size:14px;font-weight:700;color:#EF4444">${fmtMoney(e.amount)}</div></div>`).join('')}
-      <div style="display:flex;justify-content:space-between;padding-top:10px;font-weight:700;font-size:14px">
-        <span>Toplam masraf</span><span style="color:#EF4444">${fmtMoney(expTotal)}</span>
-      </div>
-    </div>`;
-  }
   document.getElementById('reportContent').innerHTML=html
 }
 
@@ -1086,7 +1074,12 @@ async function sharePDF(){
       const stLabel={yeni:'Yeni',beklemede:'Odeme Bekl.',tamamlandi:'Tamamlandi',onemli:'Onemli'}[o.status||'yeni'];
       const payLabel={nakit:'Nakit',havale:'Havale',kart:'Kart'}[o.pay]||'';
       y=pdfSectionTitle(doc,trChar(o.customerName||'Isimsiz')+' — '+o.time+' — '+payLabel+' — '+stLabel,y);
-      if(o.customerAddr){doc.setTextColor(100,100,100);doc.setFontSize(8);doc.text('Adres: '+trChar(o.customerAddr).substring(0,60),20,y+2);y+=6}
+      if(o.customerAddr){
+        doc.setTextColor(100,100,100);doc.setFontSize(8);doc.setFont('helvetica','normal');
+        const addrLines=doc.splitTextToSize('Adres: '+trChar(o.customerAddr),170);
+        addrLines.forEach(line=>{if(y>270){doc.addPage();y=14}doc.text(line,20,y+3);y+=5;});
+        y+=2;
+      }
       o.lines.forEach(l=>{
         if(y>270){doc.addPage();y=14}
         y=pdfRow(doc,[{t:trChar(l.product),x:20,max:30},{t:l.qty+' x '+fmtMoney(l.price),x:100},{t:fmtMoney(l.qty*l.price),x:175,align:'right'}],y,false);
@@ -1097,15 +1090,16 @@ async function sharePDF(){
   y+=4;doc.setFillColor(30,30,30);doc.rect(14,y,182,10,'F');
   doc.setTextColor(255,255,255);doc.setFontSize(11);doc.setFont('helvetica','bold');
   doc.text('GENEL TOPLAM',16,y+7);doc.text(fmtMoney(total),175,y+7,{align:'right'});
-  y+=14;
   const dayExpenses=expenses.filter(e=>e.date===d);
   if(dayExpenses.length){
     const expTotal=dayExpenses.reduce((s,e)=>s+e.amount,0);
+    y+=16;
     doc.setFillColor(245,245,245);doc.rect(14,y,182,7,'F');
     doc.setTextColor(80,80,80);doc.setFontSize(8);doc.setFont('helvetica','bold');
-    doc.text('NOT: GUNLUK MASRAFLAR (ciroya dahil degil)',16,y+5);
+    doc.text('NOT: GUNLUK MASRAFLAR',16,y+5);
     y+=9;
     dayExpenses.forEach(e=>{
+      if(y>275){doc.addPage();y=14}
       doc.setFont('helvetica','normal');doc.setTextColor(80,80,80);doc.setFontSize(8);
       doc.text('• '+trChar(e.desc).substring(0,45),18,y+3);
       doc.text(fmtMoney(e.amount),175,y+3,{align:'right'});
