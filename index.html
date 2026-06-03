@@ -255,6 +255,46 @@ input::placeholder,textarea::placeholder{color:#B0B4CC}
       </div>
     </div>
 
+    <!-- MASRAFLAR -->
+    <div id="pageExpenses" class="page">
+      <div style="display:flex;gap:6px;margin-bottom:12px;background:#F0F2FF;border-radius:14px;padding:4px">
+        <button id="tabExpDaily" class="pay-btn active" style="flex:1;border-radius:10px" onclick="switchExpTab('daily')">📅 Günlük</button>
+        <button id="tabExpMonthly" class="pay-btn" style="flex:1;border-radius:10px" onclick="switchExpTab('monthly')">📆 Aylık</button>
+      </div>
+
+      <div id="expDailyTab">
+        <div class="nav-date">
+          <button class="icon-btn" style="font-size:22px" onclick="changeExpDay(-1)">‹</button>
+          <span id="expDayLabel"></span>
+          <button class="icon-btn" style="font-size:22px" onclick="changeExpDay(1)">›</button>
+        </div>
+        <div class="card">
+          <div class="sec">Yeni masraf ekle</div>
+          <label>Açıklama</label>
+          <input id="expDesc" placeholder="Örn: Yemek, Kargo, Kira…" autocomplete="off"/>
+          <label>Tutar (TL)</label>
+          <input id="expAmount" type="number" min="0" placeholder="0" inputmode="numeric"/>
+          <button class="btn primary full" style="margin-top:14px" onclick="addExpense()">+ Masraf Ekle</button>
+        </div>
+        <div style="display:flex;justify-content:flex-end;margin-bottom:10px">
+          <button class="btn sm primary" onclick="shareExpensePDF('daily')">↑ PDF</button>
+        </div>
+        <div id="expDailyContent"></div>
+      </div>
+
+      <div id="expMonthlyTab" style="display:none">
+        <div class="nav-date">
+          <button class="icon-btn" style="font-size:22px" onclick="changeExpMonth(-1)">‹</button>
+          <span id="expMonthLabel"></span>
+          <button class="icon-btn" style="font-size:22px" onclick="changeExpMonth(1)">›</button>
+        </div>
+        <div style="display:flex;justify-content:flex-end;margin-bottom:10px">
+          <button class="btn sm primary" onclick="shareExpensePDF('monthly')">↑ PDF</button>
+        </div>
+        <div id="expMonthlyContent"></div>
+      </div>
+    </div>
+
     <!-- AYARLAR -->
     <div id="pageSettings" class="page">
       <div class="card">
@@ -296,6 +336,9 @@ input::placeholder,textarea::placeholder{color:#B0B4CC}
       </button>
       <button onclick="showPage('Report',this)">
         <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="14" x2="16" y2="14"/></svg>Ekstre
+      </button>
+      <button onclick="showPage('Expenses',this)">
+        <svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>Masraf
       </button>
       <button onclick="showPage('Settings',this)">
         <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>Ayarlar
@@ -378,6 +421,7 @@ input::placeholder,textarea::placeholder{color:#B0B4CC}
 function trChar(s){if(!s)return'';return String(s).replace(/ğ/g,'g').replace(/Ğ/g,'G').replace(/ü/g,'u').replace(/Ü/g,'U').replace(/ş/g,'s').replace(/Ş/g,'S').replace(/ı/g,'i').replace(/İ/g,'I').replace(/ö/g,'o').replace(/Ö/g,'O').replace(/ç/g,'c').replace(/Ç/g,'C')}
 
 let customers=JSON.parse(localStorage.getItem('st_customers')||'[]');
+let expenses=JSON.parse(localStorage.getItem('st_expenses')||'[]');
 let products=JSON.parse(localStorage.getItem('st_products')||'[]');
 let orders=JSON.parse(localStorage.getItem('st_orders')||'[]');
 let lineCount=0, selectedPay='nakit', editPay='nakit', reportFilter='hepsi';
@@ -387,6 +431,7 @@ function save(){
   localStorage.setItem('st_customers',JSON.stringify(customers));
   localStorage.setItem('st_products',JSON.stringify(products));
   localStorage.setItem('st_orders',JSON.stringify(orders));
+  localStorage.setItem('st_expenses',JSON.stringify(expenses));
 }
 function showToast(msg,err){const t=document.getElementById('toast');t.textContent=msg;t.className='toast'+(err?' err':'');t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2400)}
 function today(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
@@ -410,7 +455,7 @@ function showPage(name,btn){
   document.getElementById('page'+name).classList.add('active');
   btn.classList.add('active');
   document.querySelector('.pages').scrollTop=0;
-  const titles={Home:'Özet',Customers:'Müşteriler',Products:'Ürünler',Order:'Sipariş Girişi',Cari:'Cari Listesi',Report:'Ekstre',Settings:'Ayarlar'};
+  const titles={Home:'Özet',Customers:'Müşteriler',Products:'Ürünler',Order:'Sipariş Girişi',Cari:'Cari Listesi',Report:'Ekstre',Expenses:'Masraflar',Settings:'Ayarlar'};
   document.getElementById('pageTitle').textContent=titles[name];
   if(name==='Home')renderHome();
   if(name==='Customers'){document.getElementById('cSearch').value='';renderCustomers();}
@@ -418,6 +463,7 @@ function showPage(name,btn){
   if(name==='Order')initOrderForm();
   if(name==='Cari')renderCari();
   if(name==='Report'){if(!currentDay)currentDay=today();updateDayLabel();renderReport();}
+  if(name==='Expenses'){if(!currentExpDay)currentExpDay=today();updateExpDayLabel();renderExpDaily();}
 }
 
 function openModal(id){document.getElementById(id).classList.remove('hidden')}
@@ -880,6 +926,18 @@ function renderReport(){
   } else {
     html+='<div class="card"><div class="empty"><span class="ico">📭</span>Bu filtrede sipariş yok</div></div>'
   }
+  // Günlük masraf notu ekle
+  const dayExpList=expenses.filter(e=>e.date===d);
+  if(dayExpList.length){
+    const expTotal=dayExpList.reduce((s,e)=>s+e.amount,0);
+    html+=`<div class="card" style="border:1.5px solid #FECACA">
+      <div class="sec" style="color:#EF4444">📝 Günlük masraflar (bilgi amaçlı)</div>
+      ${dayExpList.map(e=>`<div class="list-item"><div style="font-size:14px">${e.desc}</div><div style="font-size:14px;font-weight:700;color:#EF4444">${fmtMoney(e.amount)}</div></div>`).join('')}
+      <div style="display:flex;justify-content:space-between;padding-top:10px;font-weight:700;font-size:14px">
+        <span>Toplam masraf</span><span style="color:#EF4444">${fmtMoney(expTotal)}</span>
+      </div>
+    </div>`;
+  }
   document.getElementById('reportContent').innerHTML=html
 }
 
@@ -1039,6 +1097,23 @@ async function sharePDF(){
   y+=4;doc.setFillColor(30,30,30);doc.rect(14,y,182,10,'F');
   doc.setTextColor(255,255,255);doc.setFontSize(11);doc.setFont('helvetica','bold');
   doc.text('GENEL TOPLAM',16,y+7);doc.text(fmtMoney(total),175,y+7,{align:'right'});
+  y+=14;
+  const dayExpenses=expenses.filter(e=>e.date===d);
+  if(dayExpenses.length){
+    const expTotal=dayExpenses.reduce((s,e)=>s+e.amount,0);
+    doc.setFillColor(245,245,245);doc.rect(14,y,182,7,'F');
+    doc.setTextColor(80,80,80);doc.setFontSize(8);doc.setFont('helvetica','bold');
+    doc.text('NOT: GUNLUK MASRAFLAR (ciroya dahil degil)',16,y+5);
+    y+=9;
+    dayExpenses.forEach(e=>{
+      doc.setFont('helvetica','normal');doc.setTextColor(80,80,80);doc.setFontSize(8);
+      doc.text('• '+trChar(e.desc).substring(0,45),18,y+3);
+      doc.text(fmtMoney(e.amount),175,y+3,{align:'right'});
+      y+=6;
+    });
+    doc.setFont('helvetica','bold');doc.setTextColor(80,80,80);
+    doc.text('Toplam Masraf:',18,y+3);doc.text(fmtMoney(expTotal),175,y+3,{align:'right'});
+  }
   await shareOrDownload(doc,'ekstre_'+d+'.pdf','Satis Ekstresi '+fmtDate(d));
 }
 
@@ -1168,7 +1243,7 @@ function fallbackDownload(blob,name){const url=URL.createObjectURL(blob);const a
 
 // ── YEDEK ──
 function exportBackup(){
-  const data={version:4,date:new Date().toISOString(),customers,products,orders};
+  const data={version:5,date:new Date().toISOString(),customers,products,orders,expenses};
   const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
   const fileName='satis_yedek_'+today()+'.json';
   const file=new File([blob],fileName,{type:'application/json'});
@@ -1185,14 +1260,213 @@ function importBackup(event){
       const data=JSON.parse(e.target.result);
       if(!data.products||!data.orders){showToast('Geçersiz yedek dosyası',true);return}
       confirmAction('Yedeği Geri Yükle','Mevcut veriler silinip yedek yüklenecek.',()=>{
-        customers=data.customers||[];products=data.products;orders=data.orders;save();
+        customers=data.customers||[];products=data.products;orders=data.orders;expenses=data.expenses||[];save();
         showToast('Yedek geri yüklendi ✓');renderHome();
       });
     }catch{showToast('Dosya okunamadı',true)}
   };
   reader.readAsText(file);event.target.value='';
 }
-function clearAll(){customers=[];products=[];orders=[];save();showToast('Tüm veriler silindi');renderHome()}
+// ── MASRAFLAR ──
+let currentExpDay='';
+let currentExpMonth='';
+
+function addExpense(){
+  const desc=document.getElementById('expDesc').value.trim();
+  const amount=parseFloat(document.getElementById('expAmount').value)||0;
+  if(!desc){showToast('Açıklama gerekli',true);return}
+  if(amount<=0){showToast('Tutar sıfırdan büyük olmalı',true);return}
+  const date=currentExpDay||today();
+  expenses.push({id:Date.now(),date,desc,amount});
+  save();
+  document.getElementById('expDesc').value='';
+  document.getElementById('expAmount').value='';
+  renderExpDaily();
+  showToast('Masraf eklendi ✓')
+}
+
+function changeExpDay(dir){
+  if(!currentExpDay)currentExpDay=today();
+  const d=new Date(currentExpDay+'T00:00:00');
+  d.setDate(d.getDate()+dir);
+  currentExpDay=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  updateExpDayLabel();renderExpDaily();
+}
+
+function updateExpDayLabel(){
+  if(!currentExpDay)return;
+  const[y,m,d]=currentExpDay.split('-');
+  const dateObj=new Date(parseInt(y),parseInt(m)-1,parseInt(d));
+  let label=dateObj.toLocaleDateString('tr-TR',{day:'numeric',month:'long',year:'numeric'});
+  if(currentExpDay===today())label='Bugün · '+label;
+  document.getElementById('expDayLabel').textContent=label;
+}
+
+function renderExpDaily(){
+  const d=currentExpDay||today();
+  const dayExp=expenses.filter(e=>e.date===d).sort((a,b)=>b.id-a.id);
+  const total=dayExp.reduce((s,e)=>s+e.amount,0);
+  const el=document.getElementById('expDailyContent');
+  if(!dayExp.length){el.innerHTML='<div class="card"><div class="empty"><span class="ico">💸</span>Bu günde masraf yok</div></div>';return}
+  let html=`<div class="metrics" style="margin-bottom:12px">
+    <div class="metric accent"><div class="lbl">Günlük masraf</div><div class="val" style="font-size:16px">${fmtMoney(total)}</div></div>
+    <div class="metric"><div class="lbl">Masraf sayısı</div><div class="val">${dayExp.length}</div></div>
+  </div>
+  <div class="card"><div class="sec">Masraf listesi</div>`;
+  html+=dayExp.map(e=>{
+    const idx=expenses.indexOf(e);
+    return`<div class="list-item">
+      <div style="flex:1;min-width:0">
+        <div style="font-size:15px;font-weight:600">${e.desc}</div>
+        <div style="font-size:12px;color:#9094B0">${fmtDate(e.date)}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+        <span style="font-size:15px;font-weight:700;color:#EF4444">${fmtMoney(e.amount)}</span>
+        <button class="icon-btn" onclick="confirmAction('Masrafı Sil','${e.desc} silinecek.',()=>deleteExpense(${idx}))">🗑</button>
+      </div>
+    </div>`;
+  }).join('');
+  html+='</div>';
+  el.innerHTML=html;
+}
+
+function changeExpMonth(dir){
+  if(!currentExpMonth){const now=new Date();currentExpMonth=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');}
+  const[y,m]=currentExpMonth.split('-').map(Number);
+  const d=new Date(y,m-1+dir,1);
+  currentExpMonth=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+  updateExpMonthLabel();renderExpMonthly();
+}
+
+function updateExpMonthLabel(){
+  if(!currentExpMonth)return;
+  const[y,mo]=currentExpMonth.split('-').map(Number);
+  document.getElementById('expMonthLabel').textContent=new Date(y,mo-1,1).toLocaleDateString('tr-TR',{month:'long',year:'numeric'});
+}
+
+function renderExpMonthly(){
+  const m=currentExpMonth;
+  if(!m){document.getElementById('expMonthlyContent').innerHTML='<div class="card"><div class="empty"><span class="ico">📆</span>Ay seçiniz</div></div>';return}
+  const monthExp=expenses.filter(e=>e.date&&e.date.startsWith(m)).sort((a,b)=>a.date.localeCompare(b.date));
+  const total=monthExp.reduce((s,e)=>s+e.amount,0);
+  const el=document.getElementById('expMonthlyContent');
+  if(!monthExp.length){el.innerHTML='<div class="card"><div class="empty"><span class="ico">💸</span>Bu ayda masraf yok</div></div>';return}
+
+  // Kategori bazında
+  const byDesc={};
+  monthExp.forEach(e=>{if(!byDesc[e.desc])byDesc[e.desc]=0;byDesc[e.desc]+=e.amount});
+
+  // Günlük kırılım
+  const byDay={};
+  monthExp.forEach(e=>{if(!byDay[e.date])byDay[e.date]=0;byDay[e.date]+=e.amount});
+
+  let html=`<div class="metrics" style="margin-bottom:12px">
+    <div class="metric accent"><div class="lbl">Aylık masraf</div><div class="val" style="font-size:16px">${fmtMoney(total)}</div></div>
+    <div class="metric"><div class="lbl">Masraf sayısı</div><div class="val">${monthExp.length}</div></div>
+  </div>`;
+
+  html+=`<div class="card"><div class="sec">Kategori bazında</div>`;
+  html+=Object.entries(byDesc).sort((a,b)=>b[1]-a[1]).map(([d,v])=>`
+    <div class="list-item">
+      <div style="font-size:14px;font-weight:500">${d}</div>
+      <div style="font-size:14px;font-weight:700;color:#EF4444">${fmtMoney(v)}</div>
+    </div>`).join('');
+  html+='</div>';
+
+  html+=`<div class="card"><div class="sec">Günlük kırılım</div>`;
+  html+=Object.entries(byDay).map(([d,v])=>`
+    <div class="list-item">
+      <div style="font-size:14px;font-weight:500">${fmtDate(d)}</div>
+      <div style="font-size:14px;font-weight:700;color:#EF4444">${fmtMoney(v)}</div>
+    </div>`).join('');
+  html+='</div>';
+
+  html+=`<div class="card"><div class="sec">Tüm masraflar</div>`;
+  html+=monthExp.map(e=>{
+    const idx=expenses.indexOf(e);
+    return`<div class="list-item">
+      <div style="flex:1;min-width:0">
+        <div style="font-size:14px;font-weight:600">${e.desc}</div>
+        <div style="font-size:12px;color:#9094B0">${fmtDate(e.date)}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+        <span style="font-size:14px;font-weight:700;color:#EF4444">${fmtMoney(e.amount)}</span>
+        <button class="icon-btn" onclick="confirmAction('Masrafı Sil','${e.desc} silinecek.',()=>deleteExpense(${idx}))">🗑</button>
+      </div>
+    </div>`;
+  }).join('');
+  html+='</div>';
+  el.innerHTML=html;
+}
+
+function switchExpTab(tab){
+  const isDaily=tab==='daily';
+  document.getElementById('expDailyTab').style.display=isDaily?'block':'none';
+  document.getElementById('expMonthlyTab').style.display=isDaily?'none':'block';
+  document.getElementById('tabExpDaily').className='pay-btn'+(isDaily?' active':'');
+  document.getElementById('tabExpMonthly').className='pay-btn'+(isDaily?'':' active');
+  if(!isDaily){
+    if(!currentExpMonth){const now=new Date();currentExpMonth=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');}
+    updateExpMonthLabel();renderExpMonthly();
+  }
+}
+
+function deleteExpense(idx){expenses.splice(idx,1);save();renderExpDaily();renderExpMonthly();}
+
+async function shareExpensePDF(type){
+  if(typeof window.jspdf==='undefined'){showToast('PDF yükleniyor…');return}
+  const{jsPDF}=window.jspdf;
+  const doc=new jsPDF({orientation:'p',unit:'mm',format:'a4'});
+
+  if(type==='daily'){
+    const d=currentExpDay||today();
+    const dayExp=expenses.filter(e=>e.date===d).sort((a,b)=>b.id-a.id);
+    const total=dayExp.reduce((s,e)=>s+e.amount,0);
+    pdfHeader(doc,'GUNLUK MASRAF RAPORU',fmtDate(d)+'   |   '+dayExp.length+' masraf   |   Toplam: '+fmtMoney(total));
+    let y=36;
+    y=pdfRow(doc,[{t:'Aciklama',x:16},{t:'Tutar',x:175,align:'right'}],y,true);
+    dayExp.forEach(e=>{
+      if(y>270){doc.addPage();y=14}
+      y=pdfRow(doc,[{t:trChar(e.desc).substring(0,50),x:16},{t:fmtMoney(e.amount),x:175,align:'right'}],y,false);
+    });
+    y+=4;
+    doc.setFillColor(30,30,30);doc.rect(14,y,182,10,'F');
+    doc.setTextColor(255,255,255);doc.setFontSize(11);doc.setFont('helvetica','bold');
+    doc.text('TOPLAM MASRAF',16,y+7);doc.text(fmtMoney(total),175,y+7,{align:'right'});
+    await shareOrDownload(doc,'masraf_'+d+'.pdf','Masraf Raporu '+fmtDate(d));
+  } else {
+    const m=currentExpMonth;
+    if(!m){showToast('Önce ay seçin',true);return}
+    const[y2,mo]=m.split('-').map(Number);
+    const monthName=new Date(y2,mo-1,1).toLocaleDateString('tr-TR',{month:'long',year:'numeric'});
+    const monthExp=expenses.filter(e=>e.date&&e.date.startsWith(m)).sort((a,b)=>a.date.localeCompare(b.date));
+    const total=monthExp.reduce((s,e)=>s+e.amount,0);
+    const byDesc={};
+    monthExp.forEach(e=>{if(!byDesc[e.desc])byDesc[e.desc]=0;byDesc[e.desc]+=e.amount});
+    pdfHeader(doc,'AYLIK MASRAF RAPORU',trChar(monthName)+'   |   '+monthExp.length+' masraf   |   Toplam: '+fmtMoney(total));
+    let y=36;
+    y=pdfSectionTitle(doc,'KATEGORI BAZINDA',y);
+    y=pdfRow(doc,[{t:'Aciklama',x:16},{t:'Tutar',x:175,align:'right'}],y,true);
+    Object.entries(byDesc).sort((a,b)=>b[1]-a[1]).forEach(([d,v])=>{
+      if(y>270){doc.addPage();y=14}
+      y=pdfRow(doc,[{t:trChar(d).substring(0,50),x:16},{t:fmtMoney(v),x:175,align:'right'}],y,false);
+    });
+    y+=4;
+    y=pdfSectionTitle(doc,'TUM MASRAFLAR',y);
+    y=pdfRow(doc,[{t:'Tarih',x:16},{t:'Aciklama',x:50},{t:'Tutar',x:175,align:'right'}],y,true);
+    monthExp.forEach(e=>{
+      if(y>270){doc.addPage();y=14}
+      y=pdfRow(doc,[{t:fmtDate(e.date),x:16},{t:trChar(e.desc).substring(0,40),x:50},{t:fmtMoney(e.amount),x:175,align:'right'}],y,false);
+    });
+    y+=4;
+    doc.setFillColor(30,30,30);doc.rect(14,y,182,10,'F');
+    doc.setTextColor(255,255,255);doc.setFontSize(11);doc.setFont('helvetica','bold');
+    doc.text('TOPLAM MASRAF',16,y+7);doc.text(fmtMoney(total),175,y+7,{align:'right'});
+    await shareOrDownload(doc,'masraf_'+m+'.pdf','Aylik Masraf '+trChar(monthName));
+  }
+}
+
+function clearAll(){customers=[];products=[];orders=[];expenses=[];save();showToast('Tüm veriler silindi');renderHome()}
 
 // ── BAŞLAT ──
 document.getElementById('headerDate').textContent=new Date().toLocaleDateString('tr-TR',{day:'numeric',month:'long'});
