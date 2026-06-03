@@ -1160,6 +1160,24 @@ async function shareMonthlyPDF(){
   y+=4;doc.setFillColor(30,30,30);doc.rect(14,y,182,10,'F');
   doc.setTextColor(255,255,255);doc.setFontSize(11);doc.setFont('helvetica','bold');
   doc.text('GENEL TOPLAM',16,y+7);doc.text(fmtMoney(total),175,y+7,{align:'right'});
+  const monthExpenses=expenses.filter(e=>e.date&&e.date.startsWith(currentMonth));
+  if(monthExpenses.length){
+    const expTotal=monthExpenses.reduce((s,e)=>s+e.amount,0);
+    y+=16;
+    doc.setFillColor(245,245,245);doc.rect(14,y,182,7,'F');
+    doc.setTextColor(80,80,80);doc.setFontSize(8);doc.setFont('helvetica','bold');
+    doc.text('NOT: AYLIK MASRAFLAR',16,y+5);
+    y+=9;
+    monthExpenses.sort((a,b)=>a.date.localeCompare(b.date)).forEach(e=>{
+      if(y>275){doc.addPage();y=14}
+      doc.setFont('helvetica','normal');doc.setTextColor(80,80,80);doc.setFontSize(8);
+      doc.text(fmtDate(e.date)+' — '+trChar(e.desc).substring(0,40),18,y+3);
+      doc.text(fmtMoney(e.amount),175,y+3,{align:'right'});
+      y+=6;
+    });
+    doc.setFont('helvetica','bold');doc.setTextColor(80,80,80);
+    doc.text('Toplam Masraf:',18,y+3);doc.text(fmtMoney(expTotal),175,y+3,{align:'right'});
+  }
   await shareOrDownload(doc,'aylik_rapor_'+currentMonth+'.pdf','Aylik Rapor '+trChar(monthName));
 }
 
