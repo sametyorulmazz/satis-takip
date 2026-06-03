@@ -1135,33 +1135,23 @@ async function shareProductsPDF(){
   pdfHeader(doc,'ELDEKI URUNLER',new Date().toLocaleDateString('tr-TR')+'   |   '+products.length+' urun');
   let y=36;
 
-  y=pdfRow(doc,[{t:'Urun Adi',x:16},{t:'Fiyat',x:110},{t:'Stok',x:155},{t:'Stok Degeri',x:175,align:'right'}],y,true);
+  // Başlık satırı
+  doc.setFillColor(230,230,230);doc.rect(14,y,182,8,'F');
+  doc.setTextColor(30,30,30);doc.setFontSize(9);doc.setFont('helvetica','bold');
+  doc.text('URUN ADI',16,y+5.5);
+  doc.text('STOK',175,y+5.5,{align:'right'});
+  y+=10;
 
-  let toplamDeger=0;
   sorted.forEach(p=>{
-    if(y>270){doc.addPage();y=14}
-    const deger=p.price*p.stock;
-    toplamDeger+=deger;
-    const stokRenk=p.stock<=0?[180,0,0]:p.stock<=3?[180,120,0]:[30,30,30];
-    doc.setTextColor(...stokRenk);
-    doc.setFont('helvetica','normal');doc.setFontSize(9);
-    doc.text(trChar(p.name).substring(0,35),16,y+4);
+    if(y>275){doc.addPage();y=14}
+    doc.setFont('helvetica','normal');doc.setFontSize(10);
     doc.setTextColor(30,30,30);
-    doc.text(fmtMoney(p.price),110,y+4);
-    doc.setTextColor(...stokRenk);
-    doc.text(String(p.stock),155,y+4);
-    doc.setTextColor(30,30,30);
+    doc.text(trChar(p.name).substring(0,50),16,y+4);
     doc.setFont('helvetica','bold');
-    doc.text(fmtMoney(deger),175,y+4,{align:'right'});
-    doc.setDrawColor(200,200,200);doc.line(14,y+6,196,y+6);
-    y+=8;
+    doc.text(String(p.stock),175,y+4,{align:'right'});
+    doc.setDrawColor(210,210,210);doc.line(14,y+7,196,y+7);
+    y+=9;
   });
-
-  y+=4;
-  doc.setFillColor(30,30,30);doc.rect(14,y,182,10,'F');
-  doc.setTextColor(255,255,255);doc.setFontSize(11);doc.setFont('helvetica','bold');
-  doc.text('TOPLAM STOK DEGERI',16,y+7);
-  doc.text(fmtMoney(toplamDeger),175,y+7,{align:'right'});
 
   await shareOrDownload(doc,'urunler_'+today()+'.pdf','Eldeki Urunler');
 }
