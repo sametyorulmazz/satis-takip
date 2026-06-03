@@ -1185,6 +1185,12 @@ async function shareCariPDF(){
       const ot=o.lines.reduce((s,l)=>s+l.qty*l.price,0);
       const payLabel={nakit:'Nakit',havale:'Havale',kart:'Kart'}[o.pay]||'';
       y=pdfRow(doc,[{t:trChar(o.customerName||'Isimsiz'),x:16,max:25},{t:fmtDate(o.date),x:90},{t:payLabel,x:130},{t:fmtMoney(ot),x:175,align:'right'}],y,false);
+      if(o.customerAddr){
+        doc.setTextColor(100,100,100);doc.setFontSize(8);doc.setFont('helvetica','normal');
+        const aLines=doc.splitTextToSize('Adres: '+trChar(o.customerAddr),160);
+        aLines.forEach(line=>{if(y>270){doc.addPage();y=14}doc.text(line,18,y+3);y+=5;});
+        y+=1;
+      }
       o.lines.forEach(l=>{
         if(y>270){doc.addPage();y=14}
         doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(100,100,100);
