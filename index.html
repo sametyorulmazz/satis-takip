@@ -134,6 +134,7 @@ input::placeholder,textarea::placeholder{color:#B0B4CC}
   .modal,.confirm-modal{background:#1e1e30;color:#f0f0ff}
   #oCustomerDropdown{background:#1e1e30;border-color:#5B6AF0}
   #oCustomerDropdown div{background:#1e1e30 !important;color:#f0f0ff !important}
+  [id^='pDrop_']{background:#252538;border-color:#5B6AF0}
   #pageReport>div:first-child{background:#252538}
 }
 </style>
@@ -633,33 +634,89 @@ function addOrderLine(){
   const div=document.createElement('div');
   div.className='product-row';div.id='line_'+id;
   div.innerHTML=`<div class="product-row-header"><span>Ürün ${id}</span><button class="icon-btn" onclick="removeLine(${id})">✕</button></div>
-    <select onchange="lineChanged(this,${id})">${productOptions('')}</select>
+    <div style="position:relative">
+      <input id="pSearch_${id}" placeholder="🔍 Ürün ara…" autocomplete="off"
+        oninput="filterProductDropdown(${id})"
+        onfocus="showProductDropdown(${id})"
+        style="border-radius:12px 12px 0 0;border-bottom:none"/>
+      <div id="pDrop_${id}" style="display:none;position:absolute;left:0;right:0;background:#fff;border:1.5px solid #5B6AF0;border-top:none;border-radius:0 0 12px 12px;max-height:180px;overflow-y:auto;z-index:50;box-shadow:0 4px 12px rgba(0,0,0,0.1)"></div>
+    </div>
+    <input type="hidden" id="lProduct_${id}"/>
     <div class="pr-grid" style="margin-top:8px">
       <div><label style="margin-top:0">Adet</label><input type="number" min="1" value="1" id="lQty_${id}" inputmode="numeric" oninput="updateOrderTotal()"/></div>
       <div><label style="margin-top:0">Fiyat (TL)</label><input type="number" min="0" placeholder="0" id="lPrice_${id}" inputmode="numeric" oninput="updateOrderTotal()"/></div>
     </div>`;
   document.getElementById('orderLines').appendChild(div);updateOrderTotal()
 }
-function lineChanged(sel,id){
-  const opt=sel.options[sel.selectedIndex];
-  if(!opt||!opt.value)return updateOrderTotal();
-  // Aynı ürün başka satırda seçili mi kontrol et
+function filterProductDropdown(id){
+  showProductDropdown(id);
+}
+
+function showProductDropdown(id){
+  const q=document.getElementById('pSearch_'+id).value.toLowerCase();
+  const dd=document.getElementById('pDrop_'+id);
+  const isDark=window.matchMedia('(prefers-color-scheme:dark)').matches;
+  const bg=isDark?'#252538':'#ffffff';
+  const bgHover=isDark?'#2e2e48':'#EEF0FF';
+  const textColor=isDark?'#f0f0ff':'#1a1a2e';
+  const subColor=isDark?'#9094B0':'#6B7280';
+  const borderColor=isDark?'rgba(255,255,255,0.06)':'#e8eaf6';
+  dd.style.background=bg;
+  const sorted=[...products].sort((a,b)=>a.name.localeCompare(b.name,'tr'));
+  const filtered=q?sorted.filter(p=>p.name.toLowerCase().includes(q)):sorted;
+  if(!filtered.length){
+    dd.innerHTML=`<div style="padding:10px 14px;font-size:14px;color:${subColor}">Sonuç bulunamadı</div>`;
+    dd.style.display='block';dd.scrollTop=0;return;
+  }
+  dd.innerHTML=filtered.map(p=>`<div onclick="selectProduct(${id},'${p.name.replace(/'/g,"\\'")}',${p.price})"
+    style="padding:10px 14px;font-size:14px;cursor:pointer;border-bottom:0.5px solid ${borderColor};color:${textColor};background:${bg}"
+    onmouseover="this.style.background='${bgHover}'" onmouseout="this.style.background='${bg}'">
+    <span style="font-weight:600;color:${textColor}">${p.name}</span>
+    <span style="font-size:11px;color:${subColor};margin-left:8px">${fmtMoney(p.price)} · Stok: ${p.stock}</span>
+  </div>`).join('');
+  dd.style.display='block';dd.scrollTop=0;
+}
+
+function selectProduct(id, name, price){
+  // Aynı ürün başka satırda var mı kontrol et
   const duplicate=Array.from(document.querySelectorAll('.product-row')).some(row=>{
     const rowId=row.id.replace('line_','');
     if(rowId===String(id))return false;
-    const rowSel=row.querySelector('select');
-    return rowSel&&rowSel.value===opt.value;
+    return document.getElementById('lProduct_'+rowId)?.value===name;
   });
   if(duplicate){
-    showToast(opt.value+' zaten eklendi, adedi artırın',true);
-    sel.value='';
-    updateOrderTotal();
-    return;
+    showToast(name+' zaten eklendi, adedi artırın',true);
+    document.getElementById('pSearch_'+id).value='';
+    document.getElementById('lProduct_'+id).value='';
+    document.getElementById('pDrop_'+id).style.display='none';
+    updateOrderTotal();return;
   }
-  if(opt.dataset.price)document.getElementById('lPrice_'+id).value=Math.round(opt.dataset.price);
-  updateOrderTotal()
+  document.getElementById('lProduct_'+id).value=name;
+  document.getElementById('pSearch_'+id).value=name;
+  document.getElementById('lPrice_'+id).value=Math.round(price);
+  document.getElementById('pDrop_'+id).style.display='none';
+  updateOrderTotal();
 }
-function removeLine(id){document.getElementById('line_'+id)?.remove();updateOrderTotal();renumberLines()}
+
+// Dropdown dışına tıklayınca ürün dropdownları kapat
+document.addEventListener('click',function(e){
+  document.querySelectorAll('.product-row').forEach(row=>{
+    const id=row.id.replace('line_','');
+    const search=document.getElementById('pSearch_'+id);
+    const dd=document.getElementById('pDrop_'+id);
+    if(search&&dd&&!search.contains(e.target)&&!dd.contains(e.target)){
+      dd.style.display='none';
+    }
+  });
+});
+
+function lineChanged(sel,id){
+  // artık kullanılmıyor ama uyumluluk için bırakıldı
+}
+function removeLine(id){
+  document.getElementById('line_'+id)?.remove();
+  updateOrderTotal();renumberLines();
+}
 function renumberLines(){document.querySelectorAll('.product-row').forEach((r,i)=>{const s=r.querySelector('.product-row-header span');if(s)s.textContent='Ürün '+(i+1)})}
 function updateOrderTotal(){
   let t=0;
@@ -678,7 +735,8 @@ function saveOrder(){
   document.querySelectorAll('.product-row').forEach(row=>{
     if(err)return;
     const id=row.id.replace('line_','');
-    const product=row.querySelector('select').value;
+    const id2=row.id.replace('line_','');
+    const product=document.getElementById('lProduct_'+id2)?.value||'';
     const qty=parseInt(document.getElementById('lQty_'+id)?.value)||0;
     const price=parseFloat(document.getElementById('lPrice_'+id)?.value)||0;
     if(!product){showToast('Tüm kalemlerde ürün seçin',true);err=true;return}
