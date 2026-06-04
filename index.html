@@ -64,9 +64,13 @@ input::placeholder,textarea::placeholder{color:#B0B4CC}
 .list-item:first-child{padding-top:0}
 .empty{text-align:center;padding:40px 16px;color:#B0B4CC;font-size:14px}
 .empty .ico{font-size:38px;display:block;margin-bottom:10px;opacity:0.5}
-.nav-date{display:flex;align-items:center;justify-content:space-between;background:#fff;border-radius:14px;padding:10px 14px;box-shadow:0 2px 8px rgba(91,106,240,0.07);margin-bottom:12px}
+.nav-date{display:flex;align-items:center;justify-content:space-between;background:linear-gradient(135deg,#5B6AF0,#7C3AED);border-radius:14px;padding:10px 14px;box-shadow:0 4px 12px rgba(91,106,240,0.25);margin-bottom:12px;position:relative}
 .nav-date span{font-size:15px;font-weight:700;color:#1a1a2e}
+.nav-date-center span:first-child{color:#fff}
+.nav-date-center{position:relative;display:flex;align-items:center;gap:6px}
+.nav-date-center input[type=date],.nav-date-center input[type=month]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;z-index:2;border:none;background:none}
 .icon-btn{background:none;border:none;cursor:pointer;padding:5px;border-radius:8px;font-size:18px;line-height:1;color:#9094B0}
+.nav-date .icon-btn{color:rgba(255,255,255,0.85)}
 .icon-btn:active{background:#F0F2FF}
 .product-row{background:#F8F9FF;border-radius:12px;padding:12px;margin-bottom:8px;border:1.5px solid #E8EAF6}
 .product-row-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
@@ -234,18 +238,24 @@ input::placeholder,textarea::placeholder{color:#B0B4CC}
       <div id="dailyTab">
         <div class="nav-date">
           <button class="icon-btn" style="font-size:22px" onclick="changeDay(-1)">‹</button>
-          <span id="dayLabel"></span>
+          <div class="nav-date-center">
+            <span id="dayLabel" style="font-size:15px;font-weight:700;white-space:nowrap"></span>
+            <input type="date" id="dayPicker" onchange="onDayPick(this.value)"/>
+          </div>
           <button class="icon-btn" style="font-size:22px" onclick="changeDay(1)">›</button>
         </div>
         <div style="display:flex;justify-content:flex-end;margin-bottom:10px">
-          <button class="btn sm primary" onclick="sharePDF()">↑ PDF</button>
+          <button class="btn sm primary" onclick="openPDFNoteModal()">↑ PDF</button>
         </div>
         <div id="reportContent"></div>
       </div>
       <div id="monthlyTab" style="display:none">
         <div class="nav-date">
           <button class="icon-btn" style="font-size:22px" onclick="changeMonth(-1)">‹</button>
-          <span id="monthLabel" style="font-size:15px;font-weight:700"></span>
+          <div class="nav-date-center">
+            <span id="monthLabel" style="font-size:15px;font-weight:700;white-space:nowrap"></span>
+            <input type="month" id="monthPicker" onchange="onMonthPick(this.value)"/>
+          </div>
           <button class="icon-btn" style="font-size:22px" onclick="changeMonth(1)">›</button>
         </div>
         <div style="display:flex;justify-content:flex-end;margin-bottom:10px">
@@ -265,7 +275,10 @@ input::placeholder,textarea::placeholder{color:#B0B4CC}
       <div id="expDailyTab">
         <div class="nav-date">
           <button class="icon-btn" style="font-size:22px" onclick="changeExpDay(-1)">‹</button>
-          <span id="expDayLabel"></span>
+          <div class="nav-date-center">
+            <span id="expDayLabel" style="font-size:15px;font-weight:700;white-space:nowrap"></span>
+            <input type="date" id="expDayPicker" onchange="onExpDayPick(this.value)"/>
+          </div>
           <button class="icon-btn" style="font-size:22px" onclick="changeExpDay(1)">›</button>
         </div>
         <div class="card">
@@ -285,7 +298,10 @@ input::placeholder,textarea::placeholder{color:#B0B4CC}
       <div id="expMonthlyTab" style="display:none">
         <div class="nav-date">
           <button class="icon-btn" style="font-size:22px" onclick="changeExpMonth(-1)">‹</button>
-          <span id="expMonthLabel"></span>
+          <div class="nav-date-center">
+            <span id="expMonthLabel" style="font-size:15px;font-weight:700;white-space:nowrap"></span>
+            <input type="month" id="expMonthPicker" onchange="onExpMonthPick(this.value)"/>
+          </div>
           <button class="icon-btn" style="font-size:22px" onclick="changeExpMonth(1)">›</button>
         </div>
         <div style="display:flex;justify-content:flex-end;margin-bottom:10px">
@@ -403,6 +419,20 @@ input::placeholder,textarea::placeholder{color:#B0B4CC}
   </div>
 </div>
 
+<!-- PDF NOT MODAL -->
+<div class="modal-overlay hidden" id="modalPDFNote">
+  <div class="modal">
+    <h2>📄 PDF'e Not Ekle</h2>
+    <p style="font-size:13px;color:#9094B0;margin-bottom:12px">İsteğe bağlı. Boş bırakabilirsiniz.</p>
+    <label>Not (PDF'in altında görünecek)</label>
+    <textarea id="pdfNoteText" placeholder="Örn: Ödeme bilgileri, özel notlar…" style="height:90px"></textarea>
+    <div class="btn-row" style="margin-top:14px">
+      <button class="btn" onclick="closeModal('modalPDFNote')">İptal</button>
+      <button class="btn primary" onclick="confirmPDFNote()">PDF Oluştur</button>
+    </div>
+  </div>
+</div>
+
 <!-- ONAY MODAL -->
 <div class="modal-overlay hidden" id="modalConfirm" style="align-items:center">
   <div class="confirm-modal">
@@ -467,6 +497,17 @@ function showPage(name,btn){
 }
 
 function openModal(id){document.getElementById(id).classList.remove('hidden')}
+
+function openPDFNoteModal(){
+  document.getElementById('pdfNoteText').value='';
+  openModal('modalPDFNote');
+}
+
+function confirmPDFNote(){
+  const note=document.getElementById('pdfNoteText').value.trim();
+  closeModal('modalPDFNote');
+  sharePDF(note);
+}
 function closeModal(id){document.getElementById(id).classList.add('hidden')}
 function confirmAction(title,msg,cb){
   document.getElementById('confirmTitle').textContent=title;
@@ -856,6 +897,11 @@ function markPaid(idx){
 }
 
 // ── EKSTRE ──
+function onDayPick(val){if(!val)return;currentDay=val;updateDayLabel();renderReport();}
+function onMonthPick(val){if(!val)return;currentMonth=val;updateMonthLabel();renderMonthly();}
+function onExpDayPick(val){if(!val)return;currentExpDay=val;updateExpDayLabel();renderExpDaily();}
+function onExpMonthPick(val){if(!val)return;currentExpMonth=val;updateExpMonthLabel();renderExpMonthly();}
+
 function changeDay(dir){
   if(!currentDay)currentDay=today();
   const d=new Date(currentDay+'T00:00:00');
@@ -1029,95 +1075,229 @@ function renderMonthly(){
 }
 
 // ── PDF YARDIMCI ──
-function pdfHeader(doc,title,sub){
-  doc.setFillColor(30,30,30);doc.rect(0,0,210,28,'F');
-  doc.setTextColor(255,255,255);doc.setFontSize(15);doc.setFont('helvetica','bold');
-  doc.text(title,14,12);
-  doc.setFontSize(9);doc.setFont('helvetica','normal');
-  doc.text(sub,14,22);
+// Türkçe karakter dönüşüm tablosu - jsPDF Helvetica için
+function pdfStr(s){
+  if(!s)return'';
+  const map={
+    'Ğ':'G','ğ':'g','Ü':'U','ü':'u','Ş':'S','ş':'s',
+    'İ':'I','ı':'i','Ö':'O','ö':'o','Ç':'C','ç':'c',
+    'Ş':'S','ş':'s','İ':'I','ı':'i',
+    'Ğ':'G','ğ':'g','Ü':'U','ü':'u',
+    'Ö':'O','ö':'o','Ç':'C','ç':'c'
+  };
+  return String(s).replace(/[^\x00-\x7E]/g, ch => map[ch] || '?');
 }
+
+// Renk paleti - sade, kurumsal
+const C={
+  black:[15,15,25],
+  dark:[45,50,70],
+  mid:[120,125,145],
+  light:[240,241,245],
+  white:[255,255,255],
+  accent:[30,50,140],
+  accentLight:[230,233,248],
+  red:[180,30,30],
+  green:[20,120,60],
+  yellow:[200,150,0]
+};
+
+// Sayfa genişliği
+const PW=210, ML=14, MR=196, CW=182;
+
+function pdfSetFont(doc,size,style,color){
+  doc.setFontSize(size);
+  doc.setFont('helvetica',style||'normal');
+  doc.setTextColor(...(color||C.dark));
+}
+
+function pdfHeader(doc,title,sub,date){
+  doc.setFillColor(...C.black);
+  doc.rect(0,0,PW,22,'F');
+  doc.setFillColor(...C.accent);
+  doc.rect(0,22,PW,1,'F');
+  pdfSetFont(doc,11,'bold',C.white);
+  doc.text(pdfStr(title),ML,10);
+  pdfSetFont(doc,7,'normal',[170,175,195]);
+  doc.text(pdfStr(sub),ML,17);
+  if(date)doc.text(pdfStr(date),MR,17,{align:'right'});
+  return 28;
+}
+
+function pdfDivider(doc,y,thick){
+  doc.setDrawColor(...(thick?C.accent:C.light));
+  doc.setLineWidth(thick?0.5:0.2);
+  doc.line(ML,y,MR,y);
+}
+
 function pdfSectionTitle(doc,text,y){
-  doc.setFillColor(230,230,230);doc.rect(14,y,182,7,'F');
-  doc.setTextColor(30,30,30);doc.setFontSize(8);doc.setFont('helvetica','bold');
-  doc.text(text,16,y+5);
-  return y+9;
-}
-function pdfRow(doc,cols,y,bold){
-  doc.setFont('helvetica',bold?'bold':'normal');
-  doc.setFontSize(9);doc.setTextColor(30,30,30);
-  cols.forEach(c=>doc.text(String(c.t).substring(0,c.max||50),c.x,y+4,c.align?{align:c.align}:undefined));
-  doc.setDrawColor(200,200,200);doc.line(14,y+6,196,y+6);
+  doc.setFillColor(...C.accentLight);
+  doc.rect(ML,y,CW,6,'F');
+  pdfSetFont(doc,7,'bold',C.accent);
+  doc.text(pdfStr(text),ML+2,y+4.2);
   return y+8;
 }
 
-// ── GÜNLÜK PDF ──
-async function sharePDF(){
+function pdfRow(doc,cols,y,bold,shaded){
+  const h=bold?8:7;
+  if(bold){
+    doc.setFillColor(...C.dark);doc.rect(ML,y,CW,h,'F');
+    doc.setFillColor(...C.accent);doc.rect(ML,y,CW,1,'F');
+  } else if(shaded){
+    doc.setFillColor(...C.light);doc.rect(ML,y,CW,h,'F');
+  }
+  const sz=bold?7.5:7.5;
+  cols.forEach(c=>{
+    pdfSetFont(doc,sz,bold?'bold':'normal',bold?C.white:C.dark);
+    const txt=pdfStr(String(c.t)).substring(0,c.max||60);
+    const xPos = (c.align==='right' && c.x===MR) ? MR-3 : c.x;
+    doc.text(txt,xPos,y+(bold?5.5:4.8),c.align?{align:c.align}:undefined);
+  });
+  if(!bold){
+    doc.setDrawColor(...C.light);doc.setLineWidth(0.15);
+    doc.line(ML,y+h,MR,y+h);
+  } else {
+    doc.setDrawColor(...C.mid);doc.setLineWidth(0.3);
+    doc.line(ML,y+h,MR,y+h);
+  }
+  return y+h;
+}
+
+function pdfTotalBar(doc,label,value,y){
+  doc.setDrawColor(...C.accent);doc.setLineWidth(0.8);doc.line(ML,y,MR,y);
+  doc.setFillColor(...C.black);doc.rect(ML,y,CW,9,'F');
+  doc.setFillColor(...C.accent);doc.rect(ML,y,2,9,'F');
+  pdfSetFont(doc,8,'bold',C.white);
+  doc.text(pdfStr(label),ML+4,y+6);
+  doc.text(pdfStr(value),MR-5,y+6,{align:'right'});
+  return y+9;
+}
+
+function pdfSummaryCards(doc,cards,y){
+  const n=cards.length;
+  const w=CW/n;
+  doc.setFillColor(...C.light);doc.rect(ML,y,CW,15,'F');
+  doc.setDrawColor(...C.mid);doc.setLineWidth(0.3);doc.rect(ML,y,CW,15,'S');
+  cards.forEach((c,i)=>{
+    const x=ML+i*w;
+    if(i>0){doc.setDrawColor(...C.mid);doc.setLineWidth(0.2);doc.line(x,y+2,x,y+13);}
+    pdfSetFont(doc,6,'normal',C.mid);doc.text(pdfStr(c.label),x+3,y+6);
+    pdfSetFont(doc,8.5,'bold',C.dark);doc.text(pdfStr(c.value),x+3,y+12.5);
+  });
+  return y+19;
+}
+
+function pdfOrderBox(doc,boxStart,boxEnd){
+  doc.setDrawColor(...C.mid);doc.setLineWidth(0.3);
+  doc.line(ML,boxEnd,MR,boxEnd);
+}
+
+function pdfTableBorder(doc,y,h){
+  doc.setDrawColor(...C.mid);doc.setLineWidth(0.3);
+  doc.rect(ML,y,CW,h,'S');
+}
+
+function pdfFooter(doc,note){
+  const pc=doc.getNumberOfPages();
+  for(let i=1;i<=pc;i++){
+    doc.setPage(i);
+    doc.setFillColor(...C.light);
+    doc.rect(0,287,PW,10,'F');
+    pdfSetFont(doc,6,'normal',C.mid);
+    doc.text('Satis Takip',ML,293);
+    doc.text('Sayfa '+i+'/'+pc,MR,293,{align:'right'});
+  }
+  // Not artık PDF içinde gösteriliyor, footer'da gösterme
+
+}
+
+async function sharePDF(userNote){
   const d=currentDay;
-  if(!d){showToast('Önce tarih seçin',true);return}
-  if(typeof window.jspdf==='undefined'){showToast('PDF yükleniyor…');return}
-  const{jsPDF}=window.jspdf;
+  if(!d){showToast('Once tarih secin',true);return}
+  const _jspdfLib=window.jspdf||window.jsPDF;if(!_jspdfLib){showToast('PDF yukleniyor...');return}
+  const{jsPDF}=_jspdfLib;
   const doc=new jsPDF({orientation:'p',unit:'mm',format:'a4'});
   const dayO=orders.filter(o=>o.date===d);
   const total=dayO.reduce((s,o)=>s+o.lines.reduce((ls,l)=>ls+l.qty*l.price,0),0);
-  pdfHeader(doc,'GUNLUK SATIS EKSTRESI',fmtDate(d)+'   |   '+dayO.length+' siparis   |   Toplam: '+fmtMoney(total));
-  let y=36;
+  const byPay={nakit:0,havale:0,kart:0};
+  dayO.forEach(o=>byPay[o.pay||'nakit']+=o.lines.reduce((s,l)=>s+l.qty*l.price,0));
+  let y=pdfHeader(doc,'GUNLUK SATIS EKSTRESI',fmtDate(d)+' - '+dayO.length+' siparis',new Date().toLocaleDateString('tr-TR',{day:'numeric',month:'long',year:'numeric'}));
+  y=pdfSummaryCards(doc,[{label:'TOPLAM CIRO',value:fmtMoney(total)},{label:'NAKIT',value:fmtMoney(byPay.nakit)},{label:'HAVALE',value:fmtMoney(byPay.havale)},{label:'KREDI KARTI',value:fmtMoney(byPay.kart)}],y);
   if(dayO.length){
     const byP={};
     dayO.forEach(o=>o.lines.forEach(l=>{if(!byP[l.product])byP[l.product]={qty:0,total:0};byP[l.product].qty+=l.qty;byP[l.product].total+=l.qty*l.price}));
+    const totalQty=Object.values(byP).reduce((s,v)=>s+v.qty,0);
     y=pdfSectionTitle(doc,'URUN BAZINDA OZET',y);
-    y=pdfRow(doc,[{t:'Urun',x:16},{t:'Adet',x:120},{t:'Toplam',x:175,align:'right'}],y,true);
-    Object.entries(byP).forEach(([name,v])=>{y=pdfRow(doc,[{t:trChar(name),x:16,max:35},{t:v.qty,x:120},{t:fmtMoney(v.total),x:175,align:'right'}],y,false)});
+    y=pdfRow(doc,[{t:'Urun',x:ML+2},{t:'Adet',x:140},{t:'Toplam',x:MR,align:'right'}],y,true);
+    Object.entries(byP).forEach(([name,v],i)=>{if(y>268){doc.addPage();y=14}y=pdfRow(doc,[{t:pdfStr(name),x:ML+2,max:40},{t:String(v.qty),x:140},{t:fmtMoney(v.total),x:MR,align:'right'}],y,false,i%2===1)});
+    y=pdfRow(doc,[{t:'TOPLAM',x:ML+2},{t:totalQty+' adet',x:140},{t:fmtMoney(total),x:MR,align:'right'}],y,true);
     y+=4;
+    y=pdfSectionTitle(doc,'SIPARIS DETAYI',y);
     dayO.sort((a,b)=>b.id-a.id).forEach(o=>{
-      if(y>255){doc.addPage();y=14}
+      // Sipariş yüksekliğini hesapla
+      const addrLines=(o.customerAddr&&o.customerAddr.trim())?doc.splitTextToSize(pdfStr('Adres: '+o.customerAddr),CW-10):[];
+      const boxH=7+(addrLines.length*4.5)+((o.lines||[]).length*7)+4;
+      if(y+boxH>278){doc.addPage();y=14}
+      const boxStart=y;
       const ot=o.lines.reduce((s,l)=>s+l.qty*l.price,0);
-      const stLabel={yeni:'Yeni',beklemede:'Odeme Bekl.',tamamlandi:'Tamamlandi',onemli:'Onemli'}[o.status||'yeni'];
-      const payLabel={nakit:'Nakit',havale:'Havale',kart:'Kart'}[o.pay]||'';
-      y=pdfSectionTitle(doc,trChar(o.customerName||'Isimsiz')+' — '+o.time+' — '+payLabel+' — '+stLabel,y);
+      const stLabel={yeni:'Yeni',beklemede:'Odeme Bekleniyor',tamamlandi:'Tamamlandi',onemli:'Onemli'}[o.status||'yeni'];
+      const payLabel={nakit:'Nakit',havale:'Havale',kart:'Kredi Karti'}[o.pay]||'';
+      // Sipariş başlık bandı - üst ayırıcı çizgi
+      doc.setDrawColor(...C.mid);doc.setLineWidth(0.4);doc.line(ML,y,MR,y);
+      doc.setFillColor(...C.accentLight);doc.rect(ML,y,CW,7,'F');
+      doc.setFillColor(...C.accent);doc.rect(ML,y,3,7,'F');
+      pdfSetFont(doc,7.5,'bold',C.accent);doc.text(pdfStr(o.customerName||'Isimsiz'),ML+5,y+5);
+      pdfSetFont(doc,6.5,'normal',C.mid);doc.text(pdfStr(o.time+' - '+payLabel+' - '+stLabel),ML+55,y+5);
+      pdfSetFont(doc,7.5,'bold',C.accent);doc.text(fmtMoney(ot),MR,y+5,{align:'right'});
+      y+=8;
       if(o.customerAddr){
-        doc.setTextColor(100,100,100);doc.setFontSize(8);doc.setFont('helvetica','normal');
-        const addrLines=doc.splitTextToSize('Adres: '+trChar(o.customerAddr),170);
-        addrLines.forEach(line=>{if(y>270){doc.addPage();y=14}doc.text(line,20,y+3);y+=5;});
-        y+=2;
+        pdfSetFont(doc,6.5,'normal',C.mid);doc.setCharSpace(0);
+        addrLines.forEach(line=>{doc.text(line,ML+5,y+3);y+=4.5});y+=1;
       }
-      o.lines.forEach(l=>{
-        if(y>270){doc.addPage();y=14}
-        y=pdfRow(doc,[{t:trChar(l.product),x:20,max:30},{t:l.qty+' x '+fmtMoney(l.price),x:100},{t:fmtMoney(l.qty*l.price),x:175,align:'right'}],y,false);
+      (o.lines||[]).forEach((l,li)=>{
+        if(li%2===1){doc.setFillColor(...C.light);doc.rect(ML,y,CW,7,'F');}
+        pdfSetFont(doc,7.5,'normal',C.dark);doc.text(pdfStr(l.product),ML+5,y+4.8);
+        pdfSetFont(doc,7,'normal',C.mid);doc.text(l.qty+' adet x '+fmtMoney(l.price),ML+75,y+4.8);
+        pdfSetFont(doc,7.5,'bold',C.dark);doc.text(fmtMoney(l.qty*l.price),MR,y+4.8,{align:'right'});
+        doc.setDrawColor(...C.light);doc.setLineWidth(0.15);doc.line(ML+5,y+7,MR,y+7);
+        y+=7;
       });
       y+=2;
+      // Kutucuk dış kenarlık
+      pdfOrderBox(doc,boxStart,y);
+      y+=4;
     });
   }
-  y+=4;doc.setFillColor(30,30,30);doc.rect(14,y,182,10,'F');
-  doc.setTextColor(255,255,255);doc.setFontSize(11);doc.setFont('helvetica','bold');
-  doc.text('GENEL TOPLAM',16,y+7);doc.text(fmtMoney(total),175,y+7,{align:'right'});
+  y=pdfTotalBar(doc,'GENEL TOPLAM',fmtMoney(total),y+4);
   const dayExpenses=expenses.filter(e=>e.date===d);
   if(dayExpenses.length){
     const expTotal=dayExpenses.reduce((s,e)=>s+e.amount,0);
-    y+=16;
-    doc.setFillColor(245,245,245);doc.rect(14,y,182,7,'F');
-    doc.setTextColor(80,80,80);doc.setFontSize(8);doc.setFont('helvetica','bold');
-    doc.text('NOT: GUNLUK MASRAFLAR',16,y+5);
-    y+=9;
-    dayExpenses.forEach(e=>{
-      if(y>275){doc.addPage();y=14}
-      doc.setFont('helvetica','normal');doc.setTextColor(80,80,80);doc.setFontSize(8);
-      doc.text('• '+trChar(e.desc).substring(0,45),18,y+3);
-      doc.text(fmtMoney(e.amount),175,y+3,{align:'right'});
-      y+=6;
-    });
-    doc.setFont('helvetica','bold');doc.setTextColor(80,80,80);
-    doc.text('Toplam Masraf:',18,y+3);doc.text(fmtMoney(expTotal),175,y+3,{align:'right'});
+    y+=5;y=pdfSectionTitle(doc,'GUNLUK MASRAFLAR',y);
+    y=pdfRow(doc,[{t:'Aciklama',x:ML+2},{t:'Tutar',x:MR,align:'right'}],y,true);
+    dayExpenses.forEach((e,i)=>{if(y>268){doc.addPage();y=14}y=pdfRow(doc,[{t:pdfStr(e.desc),x:ML+2,max:50},{t:fmtMoney(e.amount),x:MR,align:'right'}],y,false,i%2===1)});
+    y=pdfRow(doc,[{t:'TOPLAM MASRAF',x:ML+2},{t:fmtMoney(expTotal),x:MR,align:'right'}],y,true);
   }
+  if(userNote&&userNote.trim()){
+    const noteLines=doc.splitTextToSize('Not: '+pdfStr(userNote),CW-6);
+    const noteH=noteLines.length*5+6;
+    if(y+noteH>282){doc.addPage();y=14;}
+    y+=4;
+    doc.setFillColor(245,246,250);doc.rect(ML,y,CW,noteH,'F');
+    doc.setDrawColor(...C.mid);doc.setLineWidth(0.3);doc.rect(ML,y,CW,noteH,'S');
+    pdfSetFont(doc,7,'normal',C.dark);
+    noteLines.forEach((line,i)=>doc.text(line,ML+2,y+5+i*5));
+    y+=noteH+2;
+  }
+  pdfFooter(doc,'');
   await shareOrDownload(doc,'ekstre_'+d+'.pdf','Satis Ekstresi '+fmtDate(d));
 }
 
-// ── AYLIK PDF ──
 async function shareMonthlyPDF(){
-  if(!currentMonth){showToast('Önce ay seçin',true);return}
-  if(typeof window.jspdf==='undefined'){showToast('PDF yükleniyor…');return}
-  const{jsPDF}=window.jspdf;
-  const[y2,mo]=currentMonth.split('-').map(Number);
-  const monthName=new Date(y2,mo-1,1).toLocaleDateString('tr-TR',{month:'long',year:'numeric'});
+  if(!currentMonth){showToast('Once ay secin',true);return}
+  const _jspdfLib=window.jspdf||window.jsPDF;if(!_jspdfLib){showToast('PDF yukleniyor...');return}
+  const{jsPDF}=_jspdfLib;
+  const[yr,mo]=currentMonth.split('-').map(Number);
+  const monthName=new Date(yr,mo-1,1).toLocaleDateString('tr-TR',{month:'long',year:'numeric'});
   const monthOrders=orders.filter(o=>o.date&&o.date.startsWith(currentMonth));
   const total=monthOrders.reduce((s,o)=>s+o.lines.reduce((ls,l)=>ls+l.qty*l.price,0),0);
   const byPay={nakit:0,havale:0,kart:0};
@@ -1128,125 +1308,140 @@ async function shareMonthlyPDF(){
   monthOrders.forEach(o=>{const k=o.customerName||'Isimsiz';if(!byC[k])byC[k]={orders:0,total:0};byC[k].orders++;byC[k].total+=o.lines.reduce((s,l)=>s+l.qty*l.price,0)});
   const byDay={};
   monthOrders.forEach(o=>{if(!byDay[o.date])byDay[o.date]={orders:0,total:0};byDay[o.date].orders++;byDay[o.date].total+=o.lines.reduce((s,l)=>s+l.qty*l.price,0)});
-
+  const totalQty=Object.values(byP).reduce((s,v)=>s+v.qty,0);
   const doc=new jsPDF({orientation:'p',unit:'mm',format:'a4'});
-  pdfHeader(doc,'AYLIK SATIS RAPORU',trChar(monthName)+'   |   '+monthOrders.length+' siparis   |   Toplam: '+fmtMoney(total));
-  let y=36;
-  y=pdfSectionTitle(doc,'ODEME YONTEMI',y);
-  y=pdfRow(doc,[{t:'Nakit',x:16},{t:fmtMoney(byPay.nakit),x:175,align:'right'}],y,false);
-  y=pdfRow(doc,[{t:'Havale',x:16},{t:fmtMoney(byPay.havale),x:175,align:'right'}],y,false);
-  y=pdfRow(doc,[{t:'Kredi Karti',x:16},{t:fmtMoney(byPay.kart),x:175,align:'right'}],y,false);
-  y+=4;
+  let y=pdfHeader(doc,'AYLIK SATIS RAPORU',pdfStr(monthName)+' - '+monthOrders.length+' siparis',new Date().toLocaleDateString('tr-TR',{day:'numeric',month:'long',year:'numeric'}));
+  y=pdfSummaryCards(doc,[{label:'TOPLAM CIRO',value:fmtMoney(total)},{label:'NAKIT',value:fmtMoney(byPay.nakit)},{label:'HAVALE',value:fmtMoney(byPay.havale)},{label:'KREDI KARTI',value:fmtMoney(byPay.kart)}],y);
   if(Object.keys(byP).length){
-    y=pdfSectionTitle(doc,'URUN BAZINDA',y);
-    y=pdfRow(doc,[{t:'Urun',x:16},{t:'Adet',x:120},{t:'Toplam',x:175,align:'right'}],y,true);
-    Object.entries(byP).sort((a,b)=>b[1].total-a[1].total).forEach(([n,v])=>{if(y>270){doc.addPage();y=14}y=pdfRow(doc,[{t:trChar(n),x:16,max:38},{t:v.qty,x:120},{t:fmtMoney(v.total),x:175,align:'right'}],y,false)});
-    y+=4;
+    y=pdfSectionTitle(doc,'URUN BAZINDA OZET',y);
+    y=pdfRow(doc,[{t:'Urun',x:ML+2},{t:'Adet',x:140},{t:'Toplam',x:MR,align:'right'}],y,true);
+    Object.entries(byP).sort((a,b)=>b[1].total-a[1].total).forEach(([n,v],i)=>{if(y>270){doc.addPage();y=14}y=pdfRow(doc,[{t:pdfStr(n),x:ML+2,max:40},{t:String(v.qty),x:140},{t:fmtMoney(v.total),x:MR,align:'right'}],y,false,i%2===1)});
+    y=pdfRow(doc,[{t:'TOPLAM',x:ML+2},{t:totalQty+' adet',x:140},{t:fmtMoney(total),x:MR,align:'right'}],y,true);y+=5;
   }
   if(Object.keys(byC).length){
     if(y>240){doc.addPage();y=14}
-    y=pdfSectionTitle(doc,'MUSTERI BAZINDA',y);
-    y=pdfRow(doc,[{t:'Musteri',x:16},{t:'Siparis',x:130},{t:'Toplam',x:175,align:'right'}],y,true);
-    Object.entries(byC).sort((a,b)=>b[1].total-a[1].total).forEach(([n,v])=>{if(y>270){doc.addPage();y=14}y=pdfRow(doc,[{t:trChar(n),x:16,max:38},{t:v.orders,x:130},{t:fmtMoney(v.total),x:175,align:'right'}],y,false)});
-    y+=4;
+    y=pdfSectionTitle(doc,'MUSTERI BAZINDA OZET',y);
+    y=pdfRow(doc,[{t:'Musteri',x:ML+2},{t:'Siparis',x:140},{t:'Toplam',x:MR,align:'right'}],y,true);
+    Object.entries(byC).sort((a,b)=>b[1].total-a[1].total).forEach(([n,v],i)=>{if(y>270){doc.addPage();y=14}y=pdfRow(doc,[{t:pdfStr(n),x:ML+2,max:40},{t:String(v.orders),x:140},{t:fmtMoney(v.total),x:MR,align:'right'}],y,false,i%2===1)});y+=5;
   }
   if(Object.keys(byDay).length){
     if(y>230){doc.addPage();y=14}
     y=pdfSectionTitle(doc,'GUNLUK KIRILIM',y);
-    y=pdfRow(doc,[{t:'Tarih',x:16},{t:'Siparis',x:120},{t:'Toplam',x:175,align:'right'}],y,true);
-    Object.entries(byDay).sort((a,b)=>a[0].localeCompare(b[0])).forEach(([d,v])=>{if(y>270){doc.addPage();y=14}y=pdfRow(doc,[{t:fmtDate(d),x:16},{t:v.orders,x:120},{t:fmtMoney(v.total),x:175,align:'right'}],y,false)});
-    y+=4;
+    y=pdfRow(doc,[{t:'Tarih',x:ML+2},{t:'Siparis',x:140},{t:'Toplam',x:MR,align:'right'}],y,true);
+    Object.entries(byDay).sort((a,b)=>a[0].localeCompare(b[0])).forEach(([d,v],i)=>{if(y>270){doc.addPage();y=14}y=pdfRow(doc,[{t:fmtDate(d),x:ML+2},{t:String(v.orders),x:140},{t:fmtMoney(v.total),x:MR,align:'right'}],y,false,i%2===1)});y+=5;
   }
-  y+=4;doc.setFillColor(30,30,30);doc.rect(14,y,182,10,'F');
-  doc.setTextColor(255,255,255);doc.setFontSize(11);doc.setFont('helvetica','bold');
-  doc.text('GENEL TOPLAM',16,y+7);doc.text(fmtMoney(total),175,y+7,{align:'right'});
-  const monthExpenses=expenses.filter(e=>e.date&&e.date.startsWith(currentMonth));
-  if(monthExpenses.length){
-    const expTotal=monthExpenses.reduce((s,e)=>s+e.amount,0);
-    y+=16;
-    doc.setFillColor(245,245,245);doc.rect(14,y,182,7,'F');
-    doc.setTextColor(80,80,80);doc.setFontSize(8);doc.setFont('helvetica','bold');
-    doc.text('NOT: AYLIK MASRAFLAR',16,y+5);
-    y+=9;
-    monthExpenses.sort((a,b)=>a.date.localeCompare(b.date)).forEach(e=>{
-      if(y>275){doc.addPage();y=14}
-      doc.setFont('helvetica','normal');doc.setTextColor(80,80,80);doc.setFontSize(8);
-      doc.text(fmtDate(e.date)+' — '+trChar(e.desc).substring(0,40),18,y+3);
-      doc.text(fmtMoney(e.amount),175,y+3,{align:'right'});
-      y+=6;
-    });
-    doc.setFont('helvetica','bold');doc.setTextColor(80,80,80);
-    doc.text('Toplam Masraf:',18,y+3);doc.text(fmtMoney(expTotal),175,y+3,{align:'right'});
+  y=pdfTotalBar(doc,'GENEL TOPLAM',fmtMoney(total),y+2);
+  const mExp=expenses.filter(e=>e.date&&e.date.startsWith(currentMonth));
+  if(mExp.length){
+    const et=mExp.reduce((s,e)=>s+e.amount,0);
+    y+=5;y=pdfSectionTitle(doc,'AYLIK MASRAFLAR',y);
+    y=pdfRow(doc,[{t:'Tarih',x:ML+2},{t:'Aciklama',x:50},{t:'Tutar',x:MR,align:'right'}],y,true);
+    mExp.sort((a,b)=>a.date.localeCompare(b.date)).forEach((e,i)=>{if(y>270){doc.addPage();y=14}y=pdfRow(doc,[{t:fmtDate(e.date),x:ML+2},{t:pdfStr(e.desc),x:50,max:40},{t:fmtMoney(e.amount),x:MR,align:'right'}],y,false,i%2===1)});
+    y=pdfRow(doc,[{t:'TOPLAM MASRAF',x:ML+2},{t:fmtMoney(et),x:MR,align:'right'}],y,true);
   }
-  await shareOrDownload(doc,'aylik_rapor_'+currentMonth+'.pdf','Aylik Rapor '+trChar(monthName));
+  pdfFooter(doc,'');
+  await shareOrDownload(doc,'aylik_rapor_'+currentMonth+'.pdf','Aylik Rapor '+monthName);
 }
 
-// ── CARİ PDF ──
 async function shareCariPDF(){
-  if(typeof window.jspdf==='undefined'){showToast('PDF yükleniyor…');return}
-  const{jsPDF}=window.jspdf;
-  const borcluOrders=[...orders].filter(o=>o.status==='beklemede').sort((a,b)=>a.date.localeCompare(b.date));
-  const total=borcluOrders.reduce((s,o)=>s+o.lines.reduce((ls,l)=>ls+l.qty*l.price,0),0);
+  const _jspdfLib=window.jspdf||window.jsPDF;if(!_jspdfLib){showToast('PDF yukleniyor...');return}
+  const{jsPDF}=_jspdfLib;
+  const borclu=[...orders].filter(o=>o.status==='beklemede').sort((a,b)=>a.date.localeCompare(b.date));
+  const total=borclu.reduce((s,o)=>s+o.lines.reduce((ls,l)=>ls+l.qty*l.price,0),0);
   const doc=new jsPDF({orientation:'p',unit:'mm',format:'a4'});
-  pdfHeader(doc,'CARI LISTE — ODEME BEKLEYENLER',new Date().toLocaleDateString('tr-TR')+'   |   '+borcluOrders.length+' siparis   |   Toplam: '+fmtMoney(total));
-  let y=36;
-  if(borcluOrders.length){
-    y=pdfRow(doc,[{t:'Musteri',x:16},{t:'Tarih',x:90},{t:'Odeme',x:130},{t:'Tutar',x:175,align:'right'}],y,true);
-    borcluOrders.forEach(o=>{
-      if(y>270){doc.addPage();y=14}
+  let y=pdfHeader(doc,'CARI LISTE - ODEME BEKLEYENLER',new Date().toLocaleDateString('tr-TR',{day:'numeric',month:'long',year:'numeric'})+' - '+borclu.length+' siparis');
+  y=pdfSummaryCards(doc,[{label:'TOPLAM ALACAK',value:fmtMoney(total)},{label:'SIPARIS SAYISI',value:String(borclu.length)}],y);
+  if(borclu.length){
+    y=pdfSectionTitle(doc,'ODEME BEKLEYEN SIPARISLER',y);
+    y=pdfRow(doc,[{t:'Musteri',x:ML+2},{t:'Tarih',x:90},{t:'Odeme',x:130},{t:'Tutar',x:MR,align:'right'}],y,true);
+    borclu.forEach((o,oi)=>{
+      if(y>255){doc.addPage();y=14}
       const ot=o.lines.reduce((s,l)=>s+l.qty*l.price,0);
-      const payLabel={nakit:'Nakit',havale:'Havale',kart:'Kart'}[o.pay]||'';
-      y=pdfRow(doc,[{t:trChar(o.customerName||'Isimsiz'),x:16,max:25},{t:fmtDate(o.date),x:90},{t:payLabel,x:130},{t:fmtMoney(ot),x:175,align:'right'}],y,false);
+      const payLabel={nakit:'Nakit',havale:'Havale',kart:'Kredi Karti'}[o.pay]||'';
+      doc.setFillColor(...C.accentLight);doc.rect(ML,y,CW,6.5,'F');
+      pdfSetFont(doc,7.5,'bold',C.accent);doc.text(pdfStr(o.customerName||'Isimsiz'),ML+2,y+4.5);
+      pdfSetFont(doc,7,'normal',C.mid);doc.text(fmtDate(o.date),90,y+4.5);doc.text(payLabel,130,y+4.5);
+      pdfSetFont(doc,7.5,'bold',C.accent);doc.text(fmtMoney(ot),MR,y+4.5,{align:'right'});y+=8;
       if(o.customerAddr){
-        doc.setTextColor(100,100,100);doc.setFontSize(8);doc.setFont('helvetica','normal');
-        const aLines=doc.splitTextToSize('Adres: '+trChar(o.customerAddr),160);
-        aLines.forEach(line=>{if(y>270){doc.addPage();y=14}doc.text(line,18,y+3);y+=5;});
-        y+=1;
+        pdfSetFont(doc,6.5,'normal',C.mid);
+        doc.setCharSpace(0);
+        const aLines=doc.splitTextToSize(pdfStr('Adres: '+o.customerAddr),CW-6);
+        aLines.forEach(line=>{if(y>272){doc.addPage();y=14}doc.text(line,ML+2,y+3);y+=4.5});y+=1;
       }
       o.lines.forEach(l=>{
-        if(y>270){doc.addPage();y=14}
-        doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(100,100,100);
-        doc.text('  '+trChar(l.product).substring(0,25)+' x'+l.qty+' = '+fmtMoney(l.qty*l.price),20,y+3);
-        y+=6;
-      });
+        if(y>272){doc.addPage();y=14}
+        pdfSetFont(doc,7,'normal',C.dark);doc.text(pdfStr(l.product),ML+4,y+4.5);
+        pdfSetFont(doc,7,'normal',C.mid);doc.text(l.qty+' adet x '+fmtMoney(l.price),ML+70,y+4.5);
+        pdfSetFont(doc,7,'bold',C.dark);doc.text(fmtMoney(l.qty*l.price),MR,y+4.5,{align:'right'});
+        pdfDivider(doc,y+7);y+=7;
+      });y+=3;
     });
   } else {
-    doc.setTextColor(100,100,100);doc.setFontSize(11);doc.text('Odeme bekleyen siparis bulunmamaktadir.',14,y+10);
+    pdfSetFont(doc,8,'normal',C.mid);doc.text('Odeme bekleyen siparis bulunmamaktadir.',ML,y+8);y+=16;
   }
-  y+=4;doc.setFillColor(30,30,30);doc.rect(14,y,182,10,'F');
-  doc.setTextColor(255,255,255);doc.setFontSize(11);doc.setFont('helvetica','bold');
-  doc.text('TOPLAM ALACAK',16,y+7);doc.text(fmtMoney(total),175,y+7,{align:'right'});
+  y=pdfTotalBar(doc,'TOPLAM ALACAK',fmtMoney(total),y+2);
+  pdfFooter(doc,'');
   await shareOrDownload(doc,'cari_liste.pdf','Cari Liste');
 }
 
 async function shareProductsPDF(){
-  if(typeof window.jspdf==='undefined'){showToast('PDF yükleniyor…');return}
-  const{jsPDF}=window.jspdf;
+  const _jspdfLib=window.jspdf||window.jsPDF;if(!_jspdfLib){showToast('PDF yukleniyor...');return}
+  const{jsPDF}=_jspdfLib;
   const doc=new jsPDF({orientation:'p',unit:'mm',format:'a4'});
   const sorted=[...products].sort((a,b)=>a.name.localeCompare(b.name,'tr'));
-
-  pdfHeader(doc,'ELDEKI URUNLER',new Date().toLocaleDateString('tr-TR')+'   |   '+products.length+' urun');
-  let y=36;
-
-  // Başlık satırı
-  doc.setFillColor(230,230,230);doc.rect(14,y,182,8,'F');
-  doc.setTextColor(30,30,30);doc.setFontSize(9);doc.setFont('helvetica','bold');
-  doc.text('URUN ADI',16,y+5.5);
-  doc.text('STOK',175,y+5.5,{align:'right'});
-  y+=10;
-
-  sorted.forEach(p=>{
+  let y=pdfHeader(doc,'ELDEKI URUNLER',new Date().toLocaleDateString('tr-TR',{day:'numeric',month:'long',year:'numeric'})+' - '+products.length+' urun');
+  y=pdfRow(doc,[{t:'Urun Adi',x:ML+2},{t:'Stok',x:MR,align:'right'}],y,true);
+  sorted.forEach((p,i)=>{
     if(y>275){doc.addPage();y=14}
-    doc.setFont('helvetica','normal');doc.setFontSize(10);
-    doc.setTextColor(30,30,30);
-    doc.text(trChar(p.name).substring(0,50),16,y+4);
-    doc.setFont('helvetica','bold');
-    doc.text(String(p.stock),175,y+4,{align:'right'});
-    doc.setDrawColor(210,210,210);doc.line(14,y+7,196,y+7);
-    y+=9;
+    const stokRenk=p.stock<=0?C.red:p.stock<=3?C.yellow:C.dark;
+    if(i%2===1){doc.setFillColor(...C.light);doc.rect(ML,y,CW,7,'F');}
+    pdfSetFont(doc,8,'normal',C.dark);doc.text(pdfStr(p.name),ML+2,y+4.8);
+    pdfSetFont(doc,8,'bold',stokRenk);doc.text(String(p.stock),MR,y+4.8,{align:'right'});
+    pdfDivider(doc,y+7);y+=7;
   });
-
+  pdfFooter(doc,'');
   await shareOrDownload(doc,'urunler_'+today()+'.pdf','Eldeki Urunler');
+}
+
+async function shareExpensePDF(type){
+  const _jspdfLib=window.jspdf||window.jsPDF;if(!_jspdfLib){showToast('PDF yukleniyor...');return}
+  const{jsPDF}=_jspdfLib;
+  const doc=new jsPDF({orientation:'p',unit:'mm',format:'a4'});
+  if(type==='daily'){
+    const d=currentExpDay||today();
+    const dayExp=expenses.filter(e=>e.date===d).sort((a,b)=>b.id-a.id);
+    const total=dayExp.reduce((s,e)=>s+e.amount,0);
+    let y=pdfHeader(doc,'GUNLUK MASRAF RAPORU',fmtDate(d)+' - '+dayExp.length+' masraf',new Date().toLocaleDateString('tr-TR',{day:'numeric',month:'long',year:'numeric'}));
+    if(!dayExp.length){pdfSetFont(doc,8,'normal',C.mid);doc.text('Bu gun icin masraf bulunmamaktadir.',ML,y+8);}
+    else{
+      y=pdfRow(doc,[{t:'Aciklama',x:ML+2},{t:'Tutar',x:MR,align:'right'}],y,true);
+      dayExp.forEach((e,i)=>{if(y>270){doc.addPage();y=14}y=pdfRow(doc,[{t:pdfStr(e.desc),x:ML+2,max:50},{t:fmtMoney(e.amount),x:MR,align:'right'}],y,false,i%2===1)});
+      y=pdfTotalBar(doc,'TOPLAM MASRAF',fmtMoney(total),y+2);
+    }
+    pdfFooter(doc,'');
+    await shareOrDownload(doc,'masraf_'+d+'.pdf','Masraf Raporu '+fmtDate(d));
+  } else {
+    const m=currentExpMonth;
+    if(!m){showToast('Once ay secin',true);return}
+    const[y2,mo]=m.split('-').map(Number);
+    const monthName=new Date(y2,mo-1,1).toLocaleDateString('tr-TR',{month:'long',year:'numeric'});
+    const monthExp=expenses.filter(e=>e.date&&e.date.startsWith(m)).sort((a,b)=>a.date.localeCompare(b.date));
+    const total=monthExp.reduce((s,e)=>s+e.amount,0);
+    const byDesc={};monthExp.forEach(e=>{if(!byDesc[e.desc])byDesc[e.desc]=0;byDesc[e.desc]+=e.amount});
+    let y=pdfHeader(doc,'AYLIK MASRAF RAPORU',pdfStr(monthName)+' - '+monthExp.length+' masraf',new Date().toLocaleDateString('tr-TR',{day:'numeric',month:'long',year:'numeric'}));
+    if(!monthExp.length){pdfSetFont(doc,8,'normal',C.mid);doc.text('Bu ay icin masraf bulunmamaktadir.',ML,y+8);}
+    else{
+      y=pdfSectionTitle(doc,'KATEGORI BAZINDA',y);
+      y=pdfRow(doc,[{t:'Aciklama',x:ML+2},{t:'Tutar',x:MR,align:'right'}],y,true);
+      Object.entries(byDesc).sort((a,b)=>b[1]-a[1]).forEach(([d,v],i)=>{if(y>270){doc.addPage();y=14}y=pdfRow(doc,[{t:pdfStr(d),x:ML+2,max:50},{t:fmtMoney(v),x:MR,align:'right'}],y,false,i%2===1)});
+      y+=5;y=pdfSectionTitle(doc,'TUM MASRAFLAR',y);
+      y=pdfRow(doc,[{t:'Tarih',x:ML+2},{t:'Aciklama',x:50},{t:'Tutar',x:MR,align:'right'}],y,true);
+      monthExp.forEach((e,i)=>{if(y>270){doc.addPage();y=14}y=pdfRow(doc,[{t:fmtDate(e.date),x:ML+2},{t:pdfStr(e.desc),x:50,max:40},{t:fmtMoney(e.amount),x:MR,align:'right'}],y,false,i%2===1)});
+      y=pdfTotalBar(doc,'TOPLAM MASRAF',fmtMoney(total),y+2);
+    }
+    pdfFooter(doc,'');
+    await shareOrDownload(doc,'masraf_'+m+'.pdf','Aylik Masraf '+monthName);
+  }
 }
 
 async function shareOrDownload(doc,fileName,title){
@@ -1431,60 +1626,6 @@ function switchExpTab(tab){
 
 function deleteExpense(idx){expenses.splice(idx,1);save();renderExpDaily();renderExpMonthly();}
 
-async function shareExpensePDF(type){
-  if(typeof window.jspdf==='undefined'){showToast('PDF yükleniyor…');return}
-  const{jsPDF}=window.jspdf;
-  const doc=new jsPDF({orientation:'p',unit:'mm',format:'a4'});
-
-  if(type==='daily'){
-    const d=currentExpDay||today();
-    const dayExp=expenses.filter(e=>e.date===d).sort((a,b)=>b.id-a.id);
-    const total=dayExp.reduce((s,e)=>s+e.amount,0);
-    pdfHeader(doc,'GUNLUK MASRAF RAPORU',fmtDate(d)+'   |   '+dayExp.length+' masraf   |   Toplam: '+fmtMoney(total));
-    let y=36;
-    y=pdfRow(doc,[{t:'Aciklama',x:16},{t:'Tutar',x:175,align:'right'}],y,true);
-    dayExp.forEach(e=>{
-      if(y>270){doc.addPage();y=14}
-      y=pdfRow(doc,[{t:trChar(e.desc).substring(0,50),x:16},{t:fmtMoney(e.amount),x:175,align:'right'}],y,false);
-    });
-    y+=4;
-    doc.setFillColor(30,30,30);doc.rect(14,y,182,10,'F');
-    doc.setTextColor(255,255,255);doc.setFontSize(11);doc.setFont('helvetica','bold');
-    doc.text('TOPLAM MASRAF',16,y+7);doc.text(fmtMoney(total),175,y+7,{align:'right'});
-    await shareOrDownload(doc,'masraf_'+d+'.pdf','Masraf Raporu '+fmtDate(d));
-  } else {
-    const m=currentExpMonth;
-    if(!m){showToast('Önce ay seçin',true);return}
-    const[y2,mo]=m.split('-').map(Number);
-    const monthName=new Date(y2,mo-1,1).toLocaleDateString('tr-TR',{month:'long',year:'numeric'});
-    const monthExp=expenses.filter(e=>e.date&&e.date.startsWith(m)).sort((a,b)=>a.date.localeCompare(b.date));
-    const total=monthExp.reduce((s,e)=>s+e.amount,0);
-    const byDesc={};
-    monthExp.forEach(e=>{if(!byDesc[e.desc])byDesc[e.desc]=0;byDesc[e.desc]+=e.amount});
-    pdfHeader(doc,'AYLIK MASRAF RAPORU',trChar(monthName)+'   |   '+monthExp.length+' masraf   |   Toplam: '+fmtMoney(total));
-    let y=36;
-    y=pdfSectionTitle(doc,'KATEGORI BAZINDA',y);
-    y=pdfRow(doc,[{t:'Aciklama',x:16},{t:'Tutar',x:175,align:'right'}],y,true);
-    Object.entries(byDesc).sort((a,b)=>b[1]-a[1]).forEach(([d,v])=>{
-      if(y>270){doc.addPage();y=14}
-      y=pdfRow(doc,[{t:trChar(d).substring(0,50),x:16},{t:fmtMoney(v),x:175,align:'right'}],y,false);
-    });
-    y+=4;
-    y=pdfSectionTitle(doc,'TUM MASRAFLAR',y);
-    y=pdfRow(doc,[{t:'Tarih',x:16},{t:'Aciklama',x:50},{t:'Tutar',x:175,align:'right'}],y,true);
-    monthExp.forEach(e=>{
-      if(y>270){doc.addPage();y=14}
-      y=pdfRow(doc,[{t:fmtDate(e.date),x:16},{t:trChar(e.desc).substring(0,40),x:50},{t:fmtMoney(e.amount),x:175,align:'right'}],y,false);
-    });
-    y+=4;
-    doc.setFillColor(30,30,30);doc.rect(14,y,182,10,'F');
-    doc.setTextColor(255,255,255);doc.setFontSize(11);doc.setFont('helvetica','bold');
-    doc.text('TOPLAM MASRAF',16,y+7);doc.text(fmtMoney(total),175,y+7,{align:'right'});
-    await shareOrDownload(doc,'masraf_'+m+'.pdf','Aylik Masraf '+trChar(monthName));
-  }
-}
-
-function clearAll(){customers=[];products=[];orders=[];expenses=[];save();showToast('Tüm veriler silindi');renderHome()}
 
 // ── BAŞLAT ──
 document.getElementById('headerDate').textContent=new Date().toLocaleDateString('tr-TR',{day:'numeric',month:'long'});
