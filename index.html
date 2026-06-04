@@ -314,13 +314,22 @@ input::placeholder,textarea::placeholder{color:#B0B4CC}
     <!-- AYARLAR -->
     <div id="pageSettings" class="page">
       <div class="card">
-        <div class="sec">Veri yedekleme</div>
-        <div class="info-row">💡 Verilerini düzenli yedeklemen kayıp riskini önler.</div>
+        <div class="sec">Tam yedek (tüm veriler)</div>
+        <div class="info-row">💡 Müşteri, ürün ve siparişlerin tamamı yedeklenir.</div>
         <div class="btn-row">
           <button class="btn success" onclick="exportBackup()">⬇ Yedek Al</button>
           <button class="btn" onclick="document.getElementById('importFile').click()">⬆ Geri Yükle</button>
         </div>
         <input type="file" id="importFile" accept=".json" style="display:none" onchange="importBackup(event)"/>
+      </div>
+      <div class="card">
+        <div class="sec">Müşteri & ürün yedeği</div>
+        <div class="info-row">📋 Sadece müşteri ve ürün listesi yedeklenir, siparişler dahil değil.</div>
+        <div class="btn-row">
+          <button class="btn success" onclick="exportCatalogBackup()">⬇ Yedek Al</button>
+          <button class="btn" onclick="document.getElementById('importCatalogFile').click()">⬆ Geri Yükle</button>
+        </div>
+        <input type="file" id="importCatalogFile" accept=".json" style="display:none" onchange="importCatalogBackup(event)"/>
       </div>
       <div class="card">
         <div class="sec">Tehlikeli bölge</div>
@@ -1518,6 +1527,40 @@ async function shareOrDownload(doc,fileName,title){
 function fallbackDownload(blob,name){const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=name;a.click();URL.revokeObjectURL(url);showToast('PDF indirildi')}
 
 // ── YEDEK ──
+function exportCatalogBackup(){
+  const data={version:1,type:'catalog',date:new Date().toISOString(),customers,products};
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const fileName='musteri_urun_yedek_'+today()+'.json';
+  const file=new File([blob],fileName,{type:'application/json'});
+  if(navigator.share&&navigator.canShare&&navigator.canShare({files:[file]})){
+    navigator.share({title:'Musteri Urun Yedegi',files:[file]}).catch(()=>fallbackDownload(blob,fileName))
+  } else {fallbackDownload(blob,fileName)}
+  showToast('Müşteri & ürün yedeği alındı ✓')
+}
+
+function importCatalogBackup(event){
+  const file=event.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try{
+      const data=JSON.parse(e.target.result);
+      if(!data.customers||!data.products){showToast('Geçersiz yedek dosyası',true);return}
+      confirmAction(
+        'Müşteri & Ürün Yedeğini Geri Yükle',
+        'Mevcut müşteri ve ürün listesi silinip yedek yüklenecek. Siparişleriniz korunacak.',
+        ()=>{
+          customers=data.customers;
+          products=data.products;
+          save();
+          showToast('Müşteri & ürün yedeği geri yüklendi ✓');
+          renderHome();
+        }
+      );
+    }catch{showToast('Dosya okunamadı',true)}
+  };
+  reader.readAsText(file);event.target.value='';
+}
+
 function exportBackup(){
   const data={version:5,date:new Date().toISOString(),customers,products,orders,expenses};
   const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
