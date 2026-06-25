@@ -203,11 +203,6 @@ input::placeholder,textarea::placeholder{color:#B0B4CC}
         <input type="hidden" id="oCustomer"/>
         <div id="selectedCustomerInfo"></div>
         <label>Tarih</label><input id="oDate" type="date"/>
-        <label>Teslimat</label>
-        <div class="pay-bar" style="grid-template-columns:1fr 1fr">
-          <button class="pay-btn active" id="del_istanbul" onclick="selectDelivery('istanbul')">🏙 İstanbul</button>
-          <button class="pay-btn" id="del_kargo" onclick="selectDelivery('kargo')">📦 Kargo (+200 TL)</button>
-        </div>
         <label>Ödeme yöntemi</label>
         <div class="pay-bar">
           <button class="pay-btn active" id="pay_nakit" onclick="selectPay('nakit')">💵 Nakit</button>
@@ -419,11 +414,6 @@ input::placeholder,textarea::placeholder{color:#B0B4CC}
       <button class="pay-btn" id="epay_havale" onclick="selectEditPay('havale')">🏦 Havale</button>
       <button class="pay-btn" id="epay_kart" onclick="selectEditPay('kart')">💳 Kart</button>
     </div>
-    <label>Teslimat</label>
-    <div class="pay-bar" style="grid-template-columns:1fr 1fr">
-      <button class="pay-btn" id="edel_istanbul" onclick="selectEditDelivery('istanbul')">🏙 İstanbul</button>
-      <button class="pay-btn" id="edel_kargo" onclick="selectEditDelivery('kargo')">📦 Kargo</button>
-    </div>
     <label>Durum</label>
     <select id="editOStatus">
       <option value="yeni">🆕 Yeni Sipariş</option>
@@ -473,7 +463,7 @@ let customers=JSON.parse(localStorage.getItem('st_customers')||'[]');
 let expenses=JSON.parse(localStorage.getItem('st_expenses')||'[]');
 let products=JSON.parse(localStorage.getItem('st_products')||'[]');
 let orders=JSON.parse(localStorage.getItem('st_orders')||'[]');
-let lineCount=0, selectedPay='nakit', editPay='nakit', reportFilter='hepsi', selectedDelivery='istanbul';
+let lineCount=0, selectedPay='nakit', editPay='nakit', reportFilter='hepsi';
 let currentDay='', currentMonth='';
 
 function save(){
@@ -675,11 +665,6 @@ function saveProductEdit(){
 function deleteProduct(i){products.splice(i,1);save();renderProducts();showToast('Ürün silindi')}
 
 // ── SİPARİŞ FORMU ──
-function selectDelivery(d){
-  selectedDelivery=d;
-  ['istanbul','kargo'].forEach(k=>document.getElementById('del_'+k).className='pay-btn'+(k===d?' active':''));
-  updateOrderTotal();
-}
 function selectPay(p){selectedPay=p;PAYKEYS.forEach(k=>document.getElementById('pay_'+k).className='pay-btn'+(k===p?' active':''))}
 function onCustomerChange(){
   const c=customers.find(x=>x.id==document.getElementById('oCustomer').value);
@@ -694,8 +679,6 @@ function initOrderForm(){
   const dd=document.getElementById('oCustomerDropdown');
   dd.style.display='none';
   dd.scrollTop=0;
-  selectedDelivery='istanbul';
-  ['istanbul','kargo'].forEach(k=>document.getElementById('del_'+k).className='pay-btn'+(k==='istanbul'?' active':''));
   document.getElementById('selectedCustomerInfo').innerHTML='';
   document.getElementById('oDate').value=today();
   document.getElementById('orderLines').innerHTML='';
@@ -856,8 +839,7 @@ function updateOrderTotal(){
     const id=row.id.replace('line_','');
     t+=(parseFloat(document.getElementById('lQty_'+id)?.value)||0)*(parseFloat(document.getElementById('lPrice_'+id)?.value)||0)
   });
-  const kargoEkstra=selectedDelivery==='kargo'?200:0;
-  document.getElementById('orderTotalDisplay').textContent=fmtMoney(t+kargoEkstra)+(kargoEkstra?' (+200 TL kargo dahil)':'')
+  document.getElementById('orderTotalDisplay').textContent=fmtMoney(t)
 }
 function saveOrder(){
   const customerId=document.getElementById('oCustomer').value;
@@ -880,19 +862,7 @@ function saveOrder(){
   if(err||!lines.length)return;
   for(const l of lines){const p=products.find(x=>x.name===l.product);if(p&&p.stock<l.qty){showToast(l.product+': yetersiz stok!',true);return}}
   for(const l of lines){const p=products.find(x=>x.name===l.product);if(p)p.stock-=l.qty}
-  if(selectedDelivery==='kargo'){
-    lines.push({product:'Kargo',qty:1,price:200,isKargo:true});
-    // O günkü kargo masrafı satırını bul, varsa güncelle yoksa ekle
-    const kargoExp=expenses.find(e=>e.date===date&&e.isKargo);
-    if(kargoExp){
-      kargoExp.amount+=200;
-      kargoExp.qty=(kargoExp.qty||1)+1;
-      kargoExp.desc='Kargo masrafi x'+kargoExp.qty;
-    } else {
-      expenses.push({id:Date.now()+1,date,desc:'Kargo masrafi x1',amount:200,qty:1,isKargo:true});
-    }
-  }
-  orders.push({id:Date.now(),customerId,customerName:customer.name,customerAddr:customer.addr||'',date,time:new Date().toTimeString().slice(0,5),lines,status:'yeni',pay:selectedPay,delivery:selectedDelivery});
+  orders.push({id:Date.now(),customerId,customerName:customer.name,customerAddr:customer.addr||'',date,time:new Date().toTimeString().slice(0,5),lines,status:'yeni',pay:selectedPay});
   save();showToast('Sipariş kaydedildi ✓');initOrderForm()
 }
 
@@ -990,7 +960,7 @@ function renderReport(){
           <div>
             <div style="font-size:15px;font-weight:700">${o.customerName||'İsimsiz'}</div>
             ${o.customerAddr?`<div style="font-size:11px;color:#9094B0">📍 ${o.customerAddr}</div>`:''}
-            <div style="font-size:12px;color:#9094B0;margin-top:2px">${o.time||''} · ${PAY[o.pay]||''} · ${o.delivery==='kargo'?'📦 Kargo':'🏙 İstanbul'}</div>
+            <div style="font-size:12px;color:#9094B0;margin-top:2px">${o.time||''} · ${PAY[o.pay]||''}</div>
           </div>
           <div style="display:flex;align-items:center;gap:4px;flex-shrink:0">
             <span style="font-size:15px;font-weight:700;color:#5B6AF0">${fmtMoney(ot)}</span>
@@ -1026,14 +996,7 @@ function openOrderEdit(idx){
   document.getElementById('editOStatus').value=o.status||'yeni';
   editPay=o.pay||'nakit';
   PAYKEYS.forEach(k=>document.getElementById('epay_'+k).className='pay-btn'+(k===editPay?' active':''));
-  editDelivery=o.delivery||'istanbul';
-  ['istanbul','kargo'].forEach(k=>document.getElementById('edel_'+k).className='pay-btn'+(k===editDelivery?' active':''));
   openModal('modalOrder')
-}
-let editDelivery='istanbul';
-function selectEditDelivery(d){
-  editDelivery=d;
-  ['istanbul','kargo'].forEach(k=>document.getElementById('edel_'+k).className='pay-btn'+(k===d?' active':''));
 }
 function selectEditPay(p){editPay=p;PAYKEYS.forEach(k=>document.getElementById('epay_'+k).className='pay-btn'+(k===p?' active':''))}
 function saveOrderEdit(){
@@ -1043,51 +1006,12 @@ function saveOrderEdit(){
   const status=document.getElementById('editOStatus').value;
   if(!customerId){showToast('Müşteri seçiniz',true);return}
   const customer=customers.find(c=>c.id==customerId);
-  const oldDelivery=orders[idx].delivery||'istanbul';
-  const newDelivery=editDelivery;
-  const oldDate=orders[idx].date;
-
-  // Teslimat değiştiyse masrafları güncelle
-  if(oldDelivery!==newDelivery){
-    if(oldDelivery==='kargo'){
-      // Kargo kaldırıldı - masraftan düş
-      const ke=expenses.find(e=>e.isKargo&&e.date===oldDate);
-      if(ke){
-        ke.amount-=200;
-        ke.qty=(ke.qty||1)-1;
-        if(ke.qty<=0){expenses.splice(expenses.indexOf(ke),1);}
-        else{ke.desc='Kargo masrafi x'+ke.qty;}
-      }
-      // Siparişten kargo satırını kaldır
-      orders[idx].lines=(orders[idx].lines||[]).filter(l=>!l.isKargo);
-    }
-    if(newDelivery==='kargo'){
-      // Kargo eklendi - masrafa ekle
-      const ke=expenses.find(e=>e.isKargo&&e.date===date);
-      if(ke){ke.amount+=200;ke.qty=(ke.qty||1)+1;ke.desc='Kargo masrafi x'+ke.qty;}
-      else{expenses.push({id:Date.now()+1,date,desc:'Kargo masrafi x1',amount:200,qty:1,isKargo:true});}
-      orders[idx].lines=(orders[idx].lines||[]).filter(l=>!l.isKargo);
-      orders[idx].lines.push({product:'Kargo',qty:1,price:200,isKargo:true});
-    }
-  }
-
-  orders[idx]={...orders[idx],customerId,customerName:customer.name,customerAddr:customer.addr||'',date,status,pay:editPay,delivery:newDelivery};
+  orders[idx]={...orders[idx],customerId,customerName:customer.name,customerAddr:customer.addr||'',date,status,pay:editPay};
   save();closeModal('modalOrder');renderReport();showToast('Sipariş güncellendi ✓')
 }
 function deleteOrder(idx){
   const o=orders[idx];
-  // Kargo masrafını düş
-  if(o.delivery==='kargo'){
-    const ke=expenses.find(e=>e.isKargo&&e.date===o.date);
-    if(ke){
-      ke.amount-=200;
-      ke.qty=(ke.qty||1)-1;
-      if(ke.qty<=0){expenses.splice(expenses.indexOf(ke),1);}
-      else{ke.desc='Kargo masrafi x'+ke.qty;}
-    }
-  }
-  // Stokları geri yükle (kargo satırı hariç)
-  (o.lines||[]).forEach(l=>{if(!l.isKargo){const p=products.find(x=>x.name===l.product);if(p)p.stock+=l.qty;}});
+  o.lines.forEach(l=>{const p=products.find(x=>x.name===l.product);if(p)p.stock+=l.qty});
   orders.splice(idx,1);save();renderReport();showToast('Sipariş silindi')
 }
 
